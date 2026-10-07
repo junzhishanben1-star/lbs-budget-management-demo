@@ -90,11 +90,7 @@ h1{margin:0;font-size:25px;font-weight:700;letter-spacing:.025em;text-wrap:balan
 kbd{font-family:var(--f-num);font-size:11px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--bg);color:var(--ink)}
 textarea{width:100%;min-height:110px;font-family:var(--f-num);font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:8px}
 
-.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
-@media (min-width:1320px){
-  .layout{grid-template-columns:minmax(0,1fr) 350px}
-  .aside{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));align-self:start;height:min(760px,calc(100vh - 24px - env(safe-area-inset-top,0px)))}
-}
+.layout{display:block}
 .sheet{display:grid;gap:8px;min-width:0}
 
 /* inspector (formula bar) */
@@ -218,13 +214,16 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
 .payhero{position:relative;overflow:hidden;padding:15px 16px 14px;border-radius:14px;background:linear-gradient(135deg,#18284c,#304a83);color:#F7FAFF;box-shadow:0 12px 24px rgba(20,37,76,.18)}
 .payhero::after{content:"";position:absolute;width:150px;height:150px;right:-60px;top:-78px;border-radius:50%;background:radial-gradient(circle,rgba(130,158,255,.33),transparent 66%)}
 .payhero.over{background:linear-gradient(135deg,#48202d,#7B3545)}
-.payhero-top,.payhero-meta,.p-progress-head,.plist-head{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.payhero-top,.payhero-meta,.p-progress-head{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .payhero-top{font-size:11px;color:#C8D5F4;letter-spacing:.05em}
 .payhero strong{position:relative;z-index:1;display:block;margin:5px 0 10px;font:600 25px/1.1 var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .payhero-meta{padding-top:10px;border-top:1px solid rgba(255,255,255,.14);font-size:11px;color:#C8D5F4}
 .payhero-meta b{margin-left:4px;font:500 12px var(--f-num);color:#FFF}
 .payhero .deadline{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1);color:#FFF;padding:2px 8px;font-size:10px}
 .payhero .deadline.over{border-color:rgba(255,184,184,.55);background:rgba(255,104,104,.18);color:#FFD5D5}
+.pay-overview{display:grid;gap:10px}
+.pay-progress-card{display:grid;align-content:center;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+@media (min-width:780px){.pay-overview{grid-template-columns:minmax(310px,1.15fr) minmax(250px,.85fr)}}
 .p-progress{display:grid;gap:6px;padding:1px 2px}
 .p-progress-head{font-size:11px;color:var(--muted)}
 .p-progress-head b{font-family:var(--f-num);font-size:12px;color:var(--ink)}
@@ -232,9 +231,16 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
 .pbar i{display:block;height:100%}
 .pbar .p{background:linear-gradient(90deg,#44B978,var(--good))}.pbar .o{background:var(--bad)}
 .overline{font-size:11px;color:var(--bad);font-weight:700;background:var(--bad-soft);border-radius:7px;padding:7px 9px}
-.plist{display:grid;gap:8px}
-.plist-head{padding:3px 2px 0;font-size:11px;color:var(--muted);letter-spacing:.04em}
-.plist-head b{font:500 11px var(--f-num);color:var(--ink);background:var(--bg);border-radius:99px;padding:2px 7px}
+.pgroup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.pay-list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 2px 0;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.pay-list-head b{font:500 11px var(--f-num);color:var(--ink);background:var(--bg);border-radius:99px;padding:2px 7px}
+.pgroup{position:relative;overflow:hidden;padding:11px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(135deg,var(--rs,var(--bg)),var(--surface) 58%);box-shadow:0 4px 14px rgba(27,43,82,.04)}
+.pgroup::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--rc,var(--line))}
+.pgroup-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:1px 2px 9px}
+.pgroup-title{font-size:12px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgroup-meta{display:flex;align-items:baseline;gap:6px;white-space:nowrap;color:var(--muted);font-size:10px}
+.pgroup-meta b{font:600 13px var(--f-num);color:var(--ink)}
+.pgroup-list{display:grid;gap:7px}
 .prow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;padding:11px 11px 10px 14px;border:1px solid var(--line);border-left:0;border-radius:11px;background:var(--surface);box-shadow:0 3px 10px rgba(27,43,82,.045);transition:transform .16s,box-shadow .16s,border-color .16s}
 .prow::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 4px 4px 0;background:var(--rc,var(--line))}
 .prow:hover{transform:translateY(-1px);border-color:var(--line-strong);box-shadow:0 8px 18px rgba(27,43,82,.08)}
@@ -248,14 +254,6 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
 .pay-date{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
 .pay-date input{max-width:122px;font-size:11px;padding:3px 5px}
 .pay-all{width:100%;justify-content:center;margin-top:1px;padding-block:8px}
-@media (min-width:1320px){
-  #payPanel{height:100%;min-height:0}
-  #payPanel > :not(.plist){flex:0 0 auto}
-  .plist{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:1px 5px 1px 1px;scrollbar-gutter:stable}
-  .plist::-webkit-scrollbar{width:7px}
-  .plist::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:999px}
-  .plist::-webkit-scrollbar-track{background:transparent}
-}
 .pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:700;white-space:nowrap}
 .pill.paid{background:var(--good-soft);color:var(--good)}
 .pill.due{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
@@ -324,8 +322,8 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
       <div class="gridwrap" id="gridwrap"><table class="g" id="grid"></table></div>
       <div class="status"><span id="statusL">セルを選んで入力してください</span><span id="statusR"></span></div>
     </div>
-    <aside class="aside"><section class="panel" id="payPanel"></section></aside>
   </div>
+  <section class="panel payment-section" id="payPanel"></section>
 </div>
 <div class="ctx" id="ctx" role="menu" hidden></div>
 <div class="toast" id="toast" hidden></div>
@@ -675,26 +673,32 @@ function renderPay(){
     const now = todayStr().slice(0,7);
     payMonth = S.months.find(k => k >= now) || S.months[0];
   }
-  const k = payMonth, rows = [];
+  const k = payMonth, groups = [];
   let total = 0, paid = 0, over = 0;
   const Y = n => "¥" + Math.round(n).toLocaleString("ja-JP");
-  S.cats.forEach(c => c.items.forEach(it => {
-    const ps = personState(it, k); if (!ps) return;
-    const parts = [ps.base, ps.inc].filter(Boolean);
-    total += ps.a; parts.forEach(p => { if (p.s === "paid") paid += p.a; if (p.s === "over") over += p.a; });
-    const ids = [it, it.inc].filter(p => p && payState(p, k)).map(p => p.id).join(",");
-    const memos = [it.notes && it.notes[k], it.inc && it.inc.notes && it.inc.notes[k]].filter(Boolean);
-    const breakdown = ps.inc ? `<div class="bd">基本 ${Y(ps.base ? ps.base.a : 0)} ＋ <span class="tag">インセンティブ</span> ${Y(ps.inc.a)}</div>` : "";
-    rows.push(`<div class="prow" data-state="${ps.s}"${hueStyle(catHue(c))}>
-      <div style="min-width:0"><div class="nm">${esc(it.name)}</div><div class="ct">${esc(c.name)}${memos.length ? ` · ${esc(memos.join(" / "))}` : ""}</div></div>
-      <div class="amt">${Y(ps.a)}</div>
-      ${breakdown}
-      <div class="ctl">
-        <span class="pill ${ps.s}">${PAYLABEL[ps.s]}${ps.partPaid ? "（一部）" : ""}</span>
-        <label class="pay-date">支払日<input type="date" id="pd-${it.id}" data-pdate="${ids}" value="${ps.date || ""}" aria-label="${esc(it.name)}の支払日"></label>
-        <button type="button" class="btn ${ps.s === "paid" ? "line" : "solid"}" data-ptoggle="${ids}" data-pname="${esc(it.name)}">${ps.s === "paid" ? "取り消す" : "支払済にする"}</button>
-      </div></div>`);
-  }));
+  let itemCount = 0;
+  S.cats.forEach(c => {
+    const rows = []; let catTotal = 0;
+    c.items.forEach(it => {
+      const ps = personState(it, k); if (!ps) return;
+      const parts = [ps.base, ps.inc].filter(Boolean);
+      total += ps.a; catTotal += ps.a; itemCount++;
+      parts.forEach(p => { if (p.s === "paid") paid += p.a; if (p.s === "over") over += p.a; });
+      const ids = [it, it.inc].filter(p => p && payState(p, k)).map(p => p.id).join(",");
+      const memos = [it.notes && it.notes[k], it.inc && it.inc.notes && it.inc.notes[k]].filter(Boolean);
+      const breakdown = ps.inc ? `<div class="bd">基本 ${Y(ps.base ? ps.base.a : 0)} ＋ <span class="tag">インセンティブ</span> ${Y(ps.inc.a)}</div>` : "";
+      rows.push(`<div class="prow" data-state="${ps.s}">
+        <div style="min-width:0"><div class="nm">${esc(it.name)}</div><div class="ct">${memos.length ? esc(memos.join(" / ")) : "明細"}</div></div>
+        <div class="amt">${Y(ps.a)}</div>
+        ${breakdown}
+        <div class="ctl">
+          <span class="pill ${ps.s}">${PAYLABEL[ps.s]}${ps.partPaid ? "（一部）" : ""}</span>
+          <label class="pay-date">支払日<input type="date" id="pd-${it.id}" data-pdate="${ids}" value="${ps.date || ""}" aria-label="${esc(it.name)}の支払日"></label>
+          <button type="button" class="btn ${ps.s === "paid" ? "line" : "solid"}" data-ptoggle="${ids}" data-pname="${esc(it.name)}">${ps.s === "paid" ? "取り消す" : "支払済にする"}</button>
+        </div></div>`);
+    });
+    if (rows.length) groups.push(`<section class="pgroup"${hueStyle(catHue(c))}><div class="pgroup-head"><span class="pgroup-title">${esc(c.name)}</span><span class="pgroup-meta"><span>${rows.length}件</span><b>${Y(catTotal)}</b></span></div><div class="pgroup-list">${rows.join("")}</div></section>`);
+  });
   const unpaid = total - paid;
   const progress = total ? Math.round(paid / total * 100) : 0;
   document.getElementById("payPanel").innerHTML = `
@@ -702,14 +706,16 @@ function renderPay(){
       <div><p class="eyebrow">MONTHLY PAYMENT</p><h3>支払い状況</h3></div>
       <select id="payMonth" aria-label="対象月">${S.months.map(m => `<option value="${m}"${m === k ? " selected" : ""}>${mLabel(m).long}（${fmtDate(monthEnd(m))}期限）</option>`).join("")}</select>
     </div>
-    <div class="payhero${over ? " over" : ""}">
-      <div class="payhero-top"><span>今月の未払い</span><span class="pill deadline${over ? " over" : ""}">${over ? "期限超過" : `期限 ${fmtDate(monthEnd(k))}`}</span></div>
-      <strong>${Y(unpaid)}</strong>
-      <div class="payhero-meta"><span>支払予定 <b>${Y(total)}</b></span><span>支払済 <b>${Y(paid)}</b></span></div>
+    <div class="pay-overview">
+      <div class="payhero${over ? " over" : ""}">
+        <div class="payhero-top"><span>今月の未払い</span><span class="pill deadline${over ? " over" : ""}">${over ? "期限超過" : `期限 ${fmtDate(monthEnd(k))}`}</span></div>
+        <strong>${Y(unpaid)}</strong>
+        <div class="payhero-meta"><span>支払予定 <b>${Y(total)}</b></span><span>支払済 <b>${Y(paid)}</b></span></div>
+      </div>
+      ${total ? `<div class="pay-progress-card"><div class="p-progress"><div class="p-progress-head"><span>支払いの進捗</span><b>${progress}% 完了</b></div><div class="pbar" aria-hidden="true"><i class="p" style="width:${paid / total * 100}%"></i><i class="o" style="width:${over / total * 100}%"></i></div></div></div>` : ""}
     </div>
-    ${total ? `<div class="p-progress"><div class="p-progress-head"><span>支払いの進捗</span><b>${progress}% 完了</b></div><div class="pbar" aria-hidden="true"><i class="p" style="width:${paid / total * 100}%"></i><i class="o" style="width:${over / total * 100}%"></i></div></div>` : ""}
     ${over ? `<div class="overline">期限超過 ${Y(over)}（${fmtDate(monthEnd(k))}を過ぎています）</div>` : ""}
-    ${rows.length ? `<div class="plist-head"><span>支払先</span><b>${rows.length}件</b></div><div class="plist">${rows.join("")}</div>
+    ${groups.length ? `<div class="pay-list-head"><span>支払先</span><b>${itemCount}件</b></div><div class="pgroup-grid">${groups.join("")}</div>
       ${unpaid > 0 ? `<button type="button" class="btn line pay-all" id="payAll">未払いをまとめて支払済にする（${fmtDate(todayStr())}）</button>` : ""}`
       : `<p class="empty">この月の経費明細はまだありません。シートの経費欄に金額を入れると、ここに支払先が並びます。</p>`}`;
 }
