@@ -91,7 +91,10 @@ kbd{font-family:var(--f-num);font-size:11px;border:1px solid var(--line-strong);
 textarea{width:100%;min-height:110px;font-family:var(--f-num);font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:8px}
 
 .layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
-@media (min-width:1320px){.layout{grid-template-columns:minmax(0,1fr) 350px}.aside{position:sticky;top:calc(12px + env(safe-area-inset-top,0px))}}
+@media (min-width:1320px){
+  .layout{grid-template-columns:minmax(0,1fr) 350px}
+  .aside{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));align-self:start;height:min(760px,calc(100vh - 24px - env(safe-area-inset-top,0px)))}
+}
 .sheet{display:grid;gap:8px;min-width:0}
 
 /* inspector (formula bar) */
@@ -207,7 +210,7 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
 .sumtag{display:inline-block;margin-left:6px;font-size:10px;font-weight:400;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px;line-height:16px}
 .prow .bd{grid-column:1/-1;font-size:11px;color:var(--muted);font-family:var(--f-num)}
 /* payment panel */
-#payPanel{display:grid;gap:12px}
+#payPanel{display:flex;flex-direction:column;gap:12px}
 .phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
 .phead h3{margin:0;font-size:17px;letter-spacing:.02em}
 .phead .eyebrow{margin:0 0 3px;font-size:10px;letter-spacing:.11em;color:var(--muted);font-weight:700}
@@ -245,6 +248,14 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
 .pay-date{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
 .pay-date input{max-width:122px;font-size:11px;padding:3px 5px}
 .pay-all{width:100%;justify-content:center;margin-top:1px;padding-block:8px}
+@media (min-width:1320px){
+  #payPanel{height:100%;min-height:0}
+  #payPanel > :not(.plist){flex:0 0 auto}
+  .plist{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:1px 5px 1px 1px;scrollbar-gutter:stable}
+  .plist::-webkit-scrollbar{width:7px}
+  .plist::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:999px}
+  .plist::-webkit-scrollbar-track{background:transparent}
+}
 .pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:700;white-space:nowrap}
 .pill.paid{background:var(--good-soft);color:var(--good)}
 .pill.due{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
