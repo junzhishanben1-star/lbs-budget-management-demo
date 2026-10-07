@@ -123,7 +123,8 @@ table.g{border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-n
 .g td.price{min-width:84px;color:var(--muted)}
 .g td.calc{background:var(--calc);color:var(--muted)}
 .g tr.sub td.calc,.g tr.total td.calc,.g tr.cat td.calc{color:var(--ink)}
-.g td.inp:hover{box-shadow:inset 0 0 0 1px var(--line-strong)}
+.g td.inp{background:linear-gradient(135deg,rgba(48,103,255,.075),rgba(48,103,255,.018));color:var(--ink);font-weight:520}
+.g td.inp:hover,.g td.inp.cur{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
 .g td.q,.g td.tot,.g th.tot{background:var(--band);font-weight:500;min-width:110px;border-left:1px solid var(--line)}
 .g td.now{background-image:linear-gradient(var(--now),var(--now))}
 .g tr.sub td{font-weight:700}
@@ -264,9 +265,9 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
     </div>
     <div class="tgroup" aria-label="月の表示">
       <span class="tlab">月の表示</span>
-      <button class="btn" id="colOpen" type="button">すべて開く</button>
-      <button class="btn" id="colNow" type="button">今のQだけ開く</button>
-      <button class="btn" id="colClose" type="button">Q計だけ</button>
+      <button class="btn" id="colOpen" type="button">月をすべて表示</button>
+      <button class="btn" id="colNow" type="button">今月のQを表示</button>
+      <button class="btn" id="colClose" type="button" title="集計だけを確認する表示。入力するときは月を開いてください">Q計だけ</button>
     </div>
     <div class="tgroup">
       <label class="tax">消費税<input id="taxCt" inputmode="decimal">%</label>
@@ -451,8 +452,11 @@ let collapsed = new Set();
 try { collapsed = new Set(JSON.parse(localStorage.getItem(KEY + "-ui") || "[]")); } catch(e) {}
 function toggleSec(label){ collapsed.has(label) ? collapsed.delete(label) : collapsed.add(label); try { localStorage.setItem(KEY + "-ui", JSON.stringify([...collapsed])); } catch(e) {} render(); }
 const NOW = () => todayStr().slice(0,7);
+// 入力しやすさを優先して、初回は月ごとのセルをすべて表示する。
+// 表示設定だけは v2 にして、以前の「Q計だけ」状態は引き継がない。
+const Q_VIEW_KEY = KEY + "-uiq-v2";
 let collapsedQ = new Set();
-try { collapsedQ = new Set(JSON.parse(localStorage.getItem(KEY + "-uiq") || "[]")); } catch(e) {}
+try { collapsedQ = new Set(JSON.parse(localStorage.getItem(Q_VIEW_KEY) || "[]")); } catch(e) {}
 const quarters = () => { const g = []; S.months.forEach(k => { const q = mLabel(k).q; let last = g[g.length - 1]; if (!last || last.q !== q) g.push(last = {q, ks:[]}); last.ks.push(k); }); return g; };
 function buildCols(){
   C = [{t:"name"}, {t:"price"}];
@@ -466,7 +470,7 @@ function buildCols(){
 const colKey = col => col ? col.t + ":" + (col.k || col.q || "") : "";
 function setQuarters(fn, msg){
   const before = C[cur.c], key = colKey(before), qOf = before && (before.k ? mLabel(before.k).q : before.q);
-  fn(); try { localStorage.setItem(KEY + "-uiq", JSON.stringify([...collapsedQ])); } catch(e) {}
+  fn(); try { localStorage.setItem(Q_VIEW_KEY, JSON.stringify([...collapsedQ])); } catch(e) {}
   render();
   let idx = C.findIndex(c => colKey(c) === key);
   if (idx < 0 && qOf) idx = C.findIndex(c => c.t === "q" && c.q === qOf);
@@ -584,7 +588,7 @@ function paintSel(scroll){
   // status
   const nums = []; let count = 0;
   for (let r = g.r0; r <= g.r1; r++) { if (!isSel(r)) continue; for (let c = Math.max(g.c0,1); c <= g.c1; c++) { const v = value(r,c); if (typeof v === "number" && !isNaN(v) && !R[r].pct) nums.push(v); count++; } }
-  document.getElementById("statusL").textContent = ed ? "入力できるセルです（式は = から）" : "計算セル（自動）";
+  document.getElementById("statusL").textContent = ed ? "手入力セル（数値または = 式を入力）" : "自動計算セル";
   updatePayBar();
   if (col.t === "m" && payMonth !== col.k) { payMonth = col.k; renderPay(); }
   // 上部サマリーは表の選択月ではなく、常にカレンダー上の今月を表示する。
@@ -984,7 +988,7 @@ document.querySelector(".wrap").addEventListener("click", e => {
     case "undo": undo(); break;
     case "rowIns": rowInsert(); break;
     case "colOpen": setQuarters(() => collapsedQ.clear(), "すべての月を表示しました"); break;
-    case "colClose": setQuarters(() => quarters().forEach(g => collapsedQ.add(g.q)), "Q計だけの表示にしました"); break;
+    case "colClose": setQuarters(() => quarters().forEach(g => collapsedQ.add(g.q)), "Q計だけの表示にしました。入力するときは月を開いてください"); break;
     case "colNow": { const nowQ = mLabel(NOW()).q, qs = quarters(), keep = qs.some(g => g.q === nowQ) ? nowQ : qs[0].q;
       setQuarters(() => { collapsedQ.clear(); qs.forEach(g => { if (g.q !== keep) collapsedQ.add(g.q); }); }, `${keep}だけ月を表示しました`); break; }
     case "incBtn": { const i = rowInfo(cur.r); if (!i || (i.type !== "item" && i.type !== "inc")) { toast("経費のメンバー（明細）の行を選んでから押してください"); break; } OPS.incAdd(i); break; }
@@ -999,7 +1003,7 @@ document.querySelector(".wrap").addEventListener("click", e => {
       const last = S.months[S.months.length - 1], m = +last.split("-")[1];
       const n = m % 3 === 0 ? 3 : 3 - (m % 3);      // 途中のQなら残りを埋める
       const added = addMonths(n), q = mLabel(added[added.length - 1]).q;
-      collapsedQ.delete(q); try { localStorage.setItem(KEY + "-uiq", JSON.stringify([...collapsedQ])); } catch(e) {}
+      collapsedQ.delete(q); try { localStorage.setItem(Q_VIEW_KEY, JSON.stringify([...collapsedQ])); } catch(e) {}
       render();
       const ci = C.findIndex(c => c.t === "m" && c.k === added[0]); if (ci > 0) { cur.c = ci; anc = {...cur}; paintSel(true); }
       toast(`${q}（${added.map(k => mLabel(k).short).join("・")}）を追加しました。前月の目標・経費を引き継いでいます`); break; }
