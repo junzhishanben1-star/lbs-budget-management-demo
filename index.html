@@ -587,7 +587,9 @@ function paintSel(scroll){
   document.getElementById("statusL").textContent = ed ? "入力できるセルです（式は = から）" : "計算セル（自動）";
   updatePayBar();
   if (col.t === "m" && payMonth !== col.k) { payMonth = col.k; renderPay(); }
-  renderKpis(payMonth);
+  // 上部サマリーは表の選択月ではなく、常にカレンダー上の今月を表示する。
+  // 支払いパネルだけは、選択セル／プルダウンで任意の月を確認できる。
+  renderKpis(NOW());
   document.getElementById("statusR").innerHTML = nums.length > 1
     ? `合計 <b>${Math.round(nums.reduce((a,b)=>a+b,0)).toLocaleString("ja-JP")}</b> ・ 平均 <b>${Math.round(nums.reduce((a,b)=>a+b,0)/nums.length).toLocaleString("ja-JP")}</b> ・ 個数 <b>${nums.length}</b>` : "";
 }
@@ -684,7 +686,7 @@ function renderKpis(k){
   let over = 0; S.cats.forEach(c => allItems(c).forEach(it => { const ps = payState(it, k); if (ps && ps.s === "over") over += ps.a; }));
   const rate = a && gT(k) ? Math.round(gA(k) / gT(k) * 100) : null;
   const L = mLabel(k);
-  document.getElementById("kpiHead").innerHTML = `<b>${L.long}</b><span>${k === NOW() ? "今月 · " : ""}シートで選んだ列の月を表示しています</span>`;
+  document.getElementById("kpiHead").innerHTML = `<b>${L.long}</b><span>今月の現状</span>`;
   const tile = (lab, big, sub, meter = "") => `<div class="kpi"><div class="lab">${lab}</div><div class="big">${big}</div>${meter}<div class="sub">${sub}</div></div>`;
   document.getElementById("kpis").innerHTML =
     tile("粗利", a ? Y(gA(k)) : Y(gT(k)), a ? `目標 ${Y(gT(k))} · 達成率 ${rate}%` : "目標値（実績は未入力）",
