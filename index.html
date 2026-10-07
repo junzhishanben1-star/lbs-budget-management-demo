@@ -207,24 +207,44 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
 .sumtag{display:inline-block;margin-left:6px;font-size:10px;font-weight:400;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px;line-height:16px}
 .prow .bd{grid-column:1/-1;font-size:11px;color:var(--muted);font-family:var(--f-num)}
 /* payment panel */
-.phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding-bottom:2px}
-.phead select{font:inherit;border:1px solid var(--line-strong);border-radius:6px;padding:3px 6px;background:var(--surface);color:var(--ink);max-width:100%}
-.psum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border-radius:var(--r-sm);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(20,27,45,.02)}
-.psum span{background:var(--bg);padding:8px 10px;font-size:11px;color:var(--muted);display:grid;gap:2px;min-width:0}
-.psum b{font-family:var(--f-num);font-size:14px;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.psum .ok b{color:var(--good)} .psum .ng b{color:var(--bad)}
-.overline{font-size:12px;color:var(--bad);font-weight:700}
-.pbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;display:flex}
+#payPanel{display:grid;gap:12px}
+.phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.phead h3{margin:0;font-size:17px;letter-spacing:.02em}
+.phead .eyebrow{margin:0 0 3px;font-size:10px;letter-spacing:.11em;color:var(--muted);font-weight:700}
+.phead select{font:inherit;font-family:var(--f-num);border:1px solid var(--line-strong);border-radius:999px;padding:6px 10px;background:var(--surface);color:var(--ink);max-width:100%;box-shadow:0 2px 8px rgba(24,38,78,.05)}
+.payhero{position:relative;overflow:hidden;padding:15px 16px 14px;border-radius:14px;background:linear-gradient(135deg,#18284c,#304a83);color:#F7FAFF;box-shadow:0 12px 24px rgba(20,37,76,.18)}
+.payhero::after{content:"";position:absolute;width:150px;height:150px;right:-60px;top:-78px;border-radius:50%;background:radial-gradient(circle,rgba(130,158,255,.33),transparent 66%)}
+.payhero.over{background:linear-gradient(135deg,#48202d,#7B3545)}
+.payhero-top,.payhero-meta,.p-progress-head,.plist-head{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.payhero-top{font-size:11px;color:#C8D5F4;letter-spacing:.05em}
+.payhero strong{position:relative;z-index:1;display:block;margin:5px 0 10px;font:600 25px/1.1 var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.payhero-meta{padding-top:10px;border-top:1px solid rgba(255,255,255,.14);font-size:11px;color:#C8D5F4}
+.payhero-meta b{margin-left:4px;font:500 12px var(--f-num);color:#FFF}
+.payhero .deadline{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1);color:#FFF;padding:2px 8px;font-size:10px}
+.payhero .deadline.over{border-color:rgba(255,184,184,.55);background:rgba(255,104,104,.18);color:#FFD5D5}
+.p-progress{display:grid;gap:6px;padding:1px 2px}
+.p-progress-head{font-size:11px;color:var(--muted)}
+.p-progress-head b{font-family:var(--f-num);font-size:12px;color:var(--ink)}
+.pbar{height:7px;border-radius:99px;background:var(--line);overflow:hidden;display:flex;box-shadow:inset 0 1px 2px rgba(20,27,45,.08)}
 .pbar i{display:block;height:100%}
-.pbar .p{background:var(--good)} .pbar .o{background:var(--bad)}
-.plist{display:grid}
-.prow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
-.prow:last-child{border-bottom:0}
+.pbar .p{background:linear-gradient(90deg,#44B978,var(--good))}.pbar .o{background:var(--bad)}
+.overline{font-size:11px;color:var(--bad);font-weight:700;background:var(--bad-soft);border-radius:7px;padding:7px 9px}
+.plist{display:grid;gap:8px}
+.plist-head{padding:3px 2px 0;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.plist-head b{font:500 11px var(--f-num);color:var(--ink);background:var(--bg);border-radius:99px;padding:2px 7px}
+.prow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;padding:11px 11px 10px 14px;border:1px solid var(--line);border-left:0;border-radius:11px;background:var(--surface);box-shadow:0 3px 10px rgba(27,43,82,.045);transition:transform .16s,box-shadow .16s,border-color .16s}
+.prow::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 4px 4px 0;background:var(--rc,var(--line))}
+.prow:hover{transform:translateY(-1px);border-color:var(--line-strong);box-shadow:0 8px 18px rgba(27,43,82,.08)}
+.prow[data-state="over"]{border-color:rgba(209,77,77,.35);background:linear-gradient(135deg,var(--surface),var(--bad-soft))}
+.prow[data-state="paid"]{background:linear-gradient(135deg,var(--surface),var(--good-soft))}
 .prow .nm{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.prow .ct{font-size:11px;color:var(--muted)}
-.prow .amt{font-family:var(--f-num);text-align:right;font-variant-numeric:tabular-nums}
-.prow .ctl{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.prow .ctl .btn{margin-left:auto}
+.prow .ct{margin-top:2px;font-size:10px;color:var(--muted)}
+.prow .amt{align-self:center;font:600 15px var(--f-num);text-align:right;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.prow .ctl{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding-top:5px;border-top:1px solid rgba(31,48,91,.07)}
+.prow .ctl .btn{margin-left:auto;min-height:30px;padding-inline:10px}
+.pay-date{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.pay-date input{max-width:122px;font-size:11px;padding:3px 5px}
+.pay-all{width:100%;justify-content:center;margin-top:1px;padding-block:8px}
 .pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:700;white-space:nowrap}
 .pill.paid{background:var(--good-soft);color:var(--good)}
 .pill.due{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
@@ -654,31 +674,32 @@ function renderPay(){
     const ids = [it, it.inc].filter(p => p && payState(p, k)).map(p => p.id).join(",");
     const memos = [it.notes && it.notes[k], it.inc && it.inc.notes && it.inc.notes[k]].filter(Boolean);
     const breakdown = ps.inc ? `<div class="bd">基本 ${Y(ps.base ? ps.base.a : 0)} ＋ <span class="tag">インセンティブ</span> ${Y(ps.inc.a)}</div>` : "";
-    rows.push(`<div class="prow"${hueStyle(catHue(c))}>
+    rows.push(`<div class="prow" data-state="${ps.s}"${hueStyle(catHue(c))}>
       <div style="min-width:0"><div class="nm">${esc(it.name)}</div><div class="ct">${esc(c.name)}${memos.length ? ` · ${esc(memos.join(" / "))}` : ""}</div></div>
       <div class="amt">${Y(ps.a)}</div>
       ${breakdown}
       <div class="ctl">
         <span class="pill ${ps.s}">${PAYLABEL[ps.s]}${ps.partPaid ? "（一部）" : ""}</span>
-        <input type="date" id="pd-${it.id}" data-pdate="${ids}" value="${ps.date || ""}" aria-label="${esc(it.name)}の支払日">
+        <label class="pay-date">支払日<input type="date" id="pd-${it.id}" data-pdate="${ids}" value="${ps.date || ""}" aria-label="${esc(it.name)}の支払日"></label>
         <button type="button" class="btn ${ps.s === "paid" ? "line" : "solid"}" data-ptoggle="${ids}" data-pname="${esc(it.name)}">${ps.s === "paid" ? "取り消す" : "支払済にする"}</button>
       </div></div>`);
   }));
   const unpaid = total - paid;
+  const progress = total ? Math.round(paid / total * 100) : 0;
   document.getElementById("payPanel").innerHTML = `
     <div class="phead">
-      <h3>支払い状況</h3>
+      <div><p class="eyebrow">MONTHLY PAYMENT</p><h3>支払い状況</h3></div>
       <select id="payMonth" aria-label="対象月">${S.months.map(m => `<option value="${m}"${m === k ? " selected" : ""}>${mLabel(m).long}（${fmtDate(monthEnd(m))}期限）</option>`).join("")}</select>
     </div>
-    <div class="psum">
-      <span>支払予定<b>${Y(total)}</b></span>
-      <span class="ok">支払済<b>${Y(paid)}</b></span>
-      <span class="${over ? "ng" : ""}">未払い<b>${Y(unpaid)}</b></span>
+    <div class="payhero${over ? " over" : ""}">
+      <div class="payhero-top"><span>今月の未払い</span><span class="pill deadline${over ? " over" : ""}">${over ? "期限超過" : `期限 ${fmtDate(monthEnd(k))}`}</span></div>
+      <strong>${Y(unpaid)}</strong>
+      <div class="payhero-meta"><span>支払予定 <b>${Y(total)}</b></span><span>支払済 <b>${Y(paid)}</b></span></div>
     </div>
-    ${total ? `<div class="pbar" aria-hidden="true"><i class="p" style="width:${paid / total * 100}%"></i><i class="o" style="width:${over / total * 100}%"></i></div>` : ""}
+    ${total ? `<div class="p-progress"><div class="p-progress-head"><span>支払いの進捗</span><b>${progress}% 完了</b></div><div class="pbar" aria-hidden="true"><i class="p" style="width:${paid / total * 100}%"></i><i class="o" style="width:${over / total * 100}%"></i></div></div>` : ""}
     ${over ? `<div class="overline">期限超過 ${Y(over)}（${fmtDate(monthEnd(k))}を過ぎています）</div>` : ""}
-    ${rows.length ? `<div class="plist">${rows.join("")}</div>
-      ${unpaid > 0 ? `<button type="button" class="btn line" id="payAll">未払いをまとめて支払済にする（${fmtDate(todayStr())}）</button>` : ""}`
+    ${rows.length ? `<div class="plist-head"><span>支払先</span><b>${rows.length}件</b></div><div class="plist">${rows.join("")}</div>
+      ${unpaid > 0 ? `<button type="button" class="btn line pay-all" id="payAll">未払いをまとめて支払済にする（${fmtDate(todayStr())}）</button>` : ""}`
       : `<p class="empty">この月の経費明細はまだありません。シートの経費欄に金額を入れると、ここに支払先が並びます。</p>`}`;
 }
 
