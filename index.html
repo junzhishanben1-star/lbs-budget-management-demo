@@ -1,0 +1,1047 @@
+<title>事業部予算管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: 濃紺のマストヘッド（月サマリー）＋ ツールバー ＋ 左にシート、右に支払い状況（広い画面のみ） */
+:root{
+  --bg:#F4F5F8; --surface:#FFFFFF; --ink:#141B2D; --muted:#646E82; --line:#E5E8EF; --line-strong:#CAD0DC;
+  --calc:#FAFBFD; --band:#F1F4FB; --now:rgba(47,91,234,.05);
+  --mast:#141B2D; --mast-ink:#EEF1F7; --mast-muted:#9AA4BA; --mast-line:#2A3450; --mast-tile:#1B2439;
+  --accent:#2F5BEA; --accent-soft:#E8EEFE; --accent-ink:#FFFFFF; --sel:rgba(47,91,234,.10);
+  --good:#15805A; --good-soft:#E2F3EB; --bad:#C2352B; --bad-soft:#FCE8E6; --warn:#B26A00; --inc:#8A4B08; --inc-soft:#FBEBD5; --inc-bg:#FFFCF6; --c-blue:#2F5BEA; --c-blue-s:#E9EFFE; --c-teal:#0B7F74; --c-teal-s:#DDF2EF; --c-green:#2A7F3E; --c-green-s:#E2F2E5; --c-amber:#A86B12; --c-amber-s:#FAEFDB; --c-red:#C2352B; --c-red-s:#FCEAE8; --c-violet:#6E46C4; --c-violet-s:#EFE9FB; --c-slate:#4D5B76; --c-slate-s:#E9ECF3; --c-pink:#B5376F; --c-pink-s:#FBE7F0;
+  --f-body:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+  --f-num:"Roboto","Helvetica Neue",Arial,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1018; --surface:#131926; --ink:#E6EAF2; --muted:#8E98AC; --line:#212938; --line-strong:#344056;
+  --calc:#111723; --band:#161E31; --now:rgba(124,155,255,.06);
+  --mast:#080B12; --mast-ink:#E6EAF2; --mast-muted:#8E98AC; --mast-line:#1E2638; --mast-tile:#101624;
+  --accent:#7C9BFF; --accent-soft:#1B2546; --accent-ink:#0C1018; --sel:rgba(124,155,255,.15);
+  --good:#4CC48E; --good-soft:#11281E; --bad:#FF7A6E; --bad-soft:#331816; --warn:#F2B04E; --inc:#F2B04E; --inc-soft:#33250F; --inc-bg:#17170F; --c-blue:#7C9BFF; --c-blue-s:#1A2445; --c-teal:#4FD1C1; --c-teal-s:#0F2B28; --c-green:#6CCB7E; --c-green-s:#132B19; --c-amber:#F2B04E; --c-amber-s:#32250E; --c-red:#FF7A6E; --c-red-s:#331816; --c-violet:#B193FF; --c-violet-s:#251A3F; --c-slate:#9AA6BF; --c-slate-s:#1D2333; --c-pink:#F07FAE; --c-pink-s:#381626; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1018; --surface:#131926; --ink:#E6EAF2; --muted:#8E98AC; --line:#212938; --line-strong:#344056;
+  --calc:#111723; --band:#161E31; --now:rgba(124,155,255,.06);
+  --mast:#080B12; --mast-ink:#E6EAF2; --mast-muted:#8E98AC; --mast-line:#1E2638; --mast-tile:#101624;
+  --accent:#7C9BFF; --accent-soft:#1B2546; --accent-ink:#0C1018; --sel:rgba(124,155,255,.15);
+  --good:#4CC48E; --good-soft:#11281E; --bad:#FF7A6E; --bad-soft:#331816; --warn:#F2B04E; --inc:#F2B04E; --inc-soft:#33250F; --inc-bg:#17170F; --c-blue:#7C9BFF; --c-blue-s:#1A2445; --c-teal:#4FD1C1; --c-teal-s:#0F2B28; --c-green:#6CCB7E; --c-green-s:#132B19; --c-amber:#F2B04E; --c-amber-s:#32250E; --c-red:#FF7A6E; --c-red-s:#331816; --c-violet:#B193FF; --c-violet-s:#251A3F; --c-slate:#9AA6BF; --c-slate-s:#1D2333; --c-pink:#F07FAE; --c-pink-s:#381626; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mono{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+/* masthead */
+.masthead{background:var(--mast);color:var(--mast-ink);padding-inline:16px;padding-block:18px 20px}
+.mh{max-width:1640px;margin:0 auto;display:grid;gap:16px}
+.mh-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.eyebrow{font-size:11px;letter-spacing:.14em;color:var(--mast-muted)}
+h1{margin:2px 0 0;font-size:21px;font-weight:700;letter-spacing:.02em;text-wrap:balance}
+.mh-actions{display:flex;gap:6px;flex-wrap:wrap}
+.mbtn{border:1px solid var(--mast-line);background:transparent;color:var(--mast-ink);border-radius:999px;padding:5px 14px;font-size:12px}
+.mbtn:hover{border-color:var(--mast-muted)}
+.kpi-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.kpi-head b{font-size:15px}
+.kpi-head span{font-size:12px;color:var(--mast-muted)}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.kpi{background:var(--mast-tile);border:1px solid var(--mast-line);border-radius:var(--r);padding:12px 14px;display:grid;gap:4px;min-width:0}
+.kpi .lab{font-size:11px;color:var(--mast-muted);letter-spacing:.04em}
+.kpi .big{font-family:var(--f-num);font-size:21px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .sub{font-size:11px;color:var(--mast-muted);font-family:var(--f-num);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .neg{color:var(--bad)} .kpi .ok{color:var(--good)}
+.meter{height:4px;background:var(--mast-line);border-radius:2px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.meter.bad i{background:var(--bad)}
+@media (max-width:1000px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi .big{font-size:17px}}
+
+/* body */
+.wrap{max-width:1640px;margin:0 auto;padding-inline:16px;padding-block:14px 32px;display:grid;gap:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tgroup{display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.btn{border:0;background:transparent;border-radius:999px;padding:5px 12px;font-size:12px;color:var(--ink)}
+.btn:hover{background:var(--accent-soft);color:var(--accent)}
+.btn:disabled{opacity:.35;cursor:default;background:transparent;color:var(--ink)}
+.btn.solid{background:var(--accent);color:var(--accent-ink)}
+.btn.solid:hover{opacity:.9}
+.btn.line{border:1px solid var(--line-strong)}
+.btn.danger{color:var(--bad)}
+.tax{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);padding:0 8px}
+.tax input{width:44px;font:inherit;font-family:var(--f-num);text-align:right;border:1px solid var(--line);border-radius:6px;padding:2px 5px;background:var(--bg);color:var(--ink)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-left:auto;flex-wrap:wrap}
+.legend i{font-style:normal;font-weight:700;margin-right:3px}
+.legend .lp{color:var(--good)} .legend .lo{color:var(--bad)} .legend .ln{color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px}
+.panel h3{margin:0;font-size:14px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.rule{background:var(--bg);border-radius:8px;padding:10px 12px}
+.rule b{display:block;font-size:11px;color:var(--accent);margin-bottom:2px}
+.keys{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted)}
+kbd{font-family:var(--f-num);font-size:11px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--bg);color:var(--ink)}
+textarea{width:100%;min-height:110px;font-family:var(--f-num);font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:8px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media (min-width:1320px){.layout{grid-template-columns:minmax(0,1fr) 350px}.aside{position:sticky;top:calc(12px + env(safe-area-inset-top,0px))}}
+.sheet{display:grid;gap:8px;min-width:0}
+
+/* inspector (formula bar) */
+.inspector{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.fxname{padding:7px 12px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px;border-right:1px solid var(--line);background:var(--bg)}
+#fx{border:0;background:transparent;color:var(--ink);font-family:var(--f-num);font-size:13px;padding:7px 12px;min-width:0}
+#fx:focus{outline:none;background:var(--accent-soft)}
+#fx:disabled{color:var(--muted)}
+@media (max-width:560px){.fxname{max-width:130px}}
+.fxlabel{display:none}
+.paybar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:7px 12px;border-radius:var(--r);background:var(--accent-soft);font-size:12px}
+.paybar .btn{background:var(--surface)}
+.paybar .btn.solid{background:var(--accent);color:var(--accent-ink)}
+input[type=date]{font:inherit;font-family:var(--f-num);border:1px solid var(--line-strong);border-radius:6px;padding:2px 6px;background:var(--surface);color:var(--ink)}
+
+/* grid */
+.gridwrap{overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);max-height:calc(100vh - 200px);min-height:360px;user-select:none;-webkit-user-select:none}
+table.g{border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums;min-width:100%}
+.g th,.g td{height:32px;padding:0 10px;border-bottom:1px solid var(--line);white-space:nowrap;position:relative}
+.g thead th{position:sticky;top:0;z-index:3;background:var(--surface);font-size:11px;font-weight:700;color:var(--muted);text-align:right;height:42px;border-bottom:1px solid var(--line-strong);vertical-align:bottom;padding-bottom:7px}
+.g thead th .yy{display:block;font-size:10px;font-weight:400;font-family:var(--f-num);color:var(--muted);opacity:.8}
+.g thead th.now{color:var(--accent)}
+.g thead th.now::before{content:"今月";position:absolute;top:5px;right:10px;font-size:9px;letter-spacing:.06em;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 6px;line-height:15px}
+.g thead th.q{color:var(--ink);background:var(--band)}
+.g .c0{position:sticky;left:0;z-index:2;text-align:left;min-width:210px;max-width:250px;overflow:hidden;text-overflow:ellipsis;background:var(--surface);border-right:1px solid var(--line)}
+.g thead th.c0{z-index:4;text-align:left}
+.g td{font-family:var(--f-num);font-size:14px;letter-spacing:.01em;text-align:right;min-width:96px;background:var(--surface);cursor:cell}
+.g td.c0{font-family:var(--f-body);font-size:13px;letter-spacing:0}
+.g td.price{min-width:84px;color:var(--muted)}
+.g td.calc{background:var(--calc);color:var(--muted)}
+.g tr.sub td.calc,.g tr.total td.calc,.g tr.cat td.calc{color:var(--ink)}
+.g td.inp:hover{box-shadow:inset 0 0 0 1px var(--line-strong)}
+.g td.q,.g td.tot,.g th.tot{background:var(--band);font-weight:500;min-width:110px;border-left:1px solid var(--line)}
+.g td.now{background-image:linear-gradient(var(--now),var(--now))}
+.g tr.sub td{font-weight:700}
+.g tr.total td{font-weight:700;border-top:1px solid var(--ink)}
+.g tr.dim td{color:var(--muted);font-size:12px}
+.g tr.cat td{font-weight:700}
+.g tr.cat td.c0{background:var(--rs,var(--calc))}
+.g tr.item td.c0{padding-left:28px}
+.g tr.sec td{background:var(--bg);height:36px;border-bottom:1px solid var(--line-strong);cursor:pointer;color:var(--ink)}
+.g tr.sec td.c0{background:var(--bg);font-family:var(--f-body);font-weight:700;font-size:12px;letter-spacing:.04em}
+.g tr.sec:hover td{color:var(--accent)}
+.chev{display:inline-block;width:14px;transition:transform .15s;color:var(--muted)}
+.g tr.sec.closed .chev{transform:rotate(-90deg)}
+.cnt{margin-left:8px;font-family:var(--f-num);font-size:10px;font-weight:400;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 6px}
+.g td.neg{color:var(--bad)}
+.g td.err{color:var(--bad);font-weight:700}
+.g td.fx::after{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.g td.pd{background:var(--good-soft)}
+.g td.ov{background:var(--bad-soft)}
+.g td.pd::before,.g td.ov::before{position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700}
+.g td.pd::before{content:"✓";color:var(--good)}
+.g td.ov::before{content:"!";color:var(--bad)}
+.g td.insel{background-image:linear-gradient(var(--sel),var(--sel))}
+.g td.cur{outline:2px solid var(--accent);outline-offset:-2px;z-index:1}
+.g td.c0.cur{z-index:2}
+.g td.edit{padding:0}
+.ed{position:absolute;inset:0;width:100%;height:100%;border:2px solid var(--accent);font:inherit;font-family:var(--f-num);text-align:right;padding:0 8px;background:var(--surface);color:var(--ink);outline:none;border-radius:2px}
+.c0 .ed{font-family:var(--f-body);text-align:left}
+.rowbtn{border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:11px;padding:0 7px;margin-left:8px;border-radius:999px;font-family:var(--f-body);font-weight:400}
+.rowbtn:hover{color:var(--accent);border-color:var(--accent)}
+.del{position:absolute;left:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);font-size:13px;padding:0 3px;opacity:0}
+tr.item:hover .del,td.cur .del{opacity:1}
+.del:hover{color:var(--bad)}
+.status{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);padding-inline:4px}
+.status b{font-family:var(--f-num);color:var(--ink);font-weight:500}
+
+/* quarter collapse */
+.qtog{border:0;background:transparent;font:inherit;color:inherit;cursor:pointer;text-align:right;padding:0;display:block;width:100%}
+.qtog .yy{white-space:nowrap}
+.qarrow{display:inline-block;margin-right:4px;color:var(--accent);font-size:10px}
+.g thead th.qh:hover{color:var(--accent)}
+.g thead th.qh.closed{background:var(--accent-soft);color:var(--accent)}
+.g td.qclosed{border-left:2px solid var(--accent-soft)}
+.tlab{font-size:11px;color:var(--muted);padding:0 4px 0 8px}
+/* color coding */
+.g tr td.c0{box-shadow:inset 4px 0 0 var(--rc,transparent)}
+.g tr.sec td,.g tr.sec td.c0{background:var(--rs,var(--bg));color:var(--rc,var(--ink))}
+.g tr.sec .chev{color:var(--rc,var(--muted))}
+.g tr.sec td.c0{box-shadow:inset 6px 0 0 var(--rc,transparent)}
+.g tr.sub td,.g tr.cat td,.g tr.total td{background:var(--rs,var(--calc))}
+.g tr.sub td.c0,.g tr.cat td.c0,.g tr.total td.c0{color:var(--rc,var(--ink))}
+.g tr.total td{border-top:1px solid var(--rc,var(--ink))}
+.g tr.profit td:not(.neg):not(.c0){color:var(--good)}
+.g tr.sub td.q,.g tr.cat td.q,.g tr.total td.q,.g tr.sub td.tot,.g tr.cat td.tot,.g tr.total td.tot{background-image:linear-gradient(rgba(0,0,0,.035),rgba(0,0,0,.035))}
+.g tr.cat td.c0::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rc);margin-right:7px;vertical-align:1px}
+.prow{border-left:3px solid var(--rc,var(--line));padding-left:10px}
+.kpi{border-top:3px solid var(--kc,var(--mast-line))}
+.kpi .lab::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--kc);margin-right:6px;vertical-align:1px}
+.kpi:nth-child(1){--kc:#6CCB7E} .kpi:nth-child(2){--kc:#FF8A7E} .kpi:nth-child(3){--kc:#F2B04E} .kpi:nth-child(4){--kc:#9AA6BF} .kpi:nth-child(5){--kc:#7C9BFF}
+/* incentive + memo */
+.g tr.inc td{background:var(--inc-bg)}
+.g tr.inc td.c0{padding-left:40px;background:var(--inc-bg)}
+.g tr.inc td.pd{background:var(--good-soft)} .g tr.inc td.ov{background:var(--bad-soft)}
+.tag{display:inline-block;font-size:10px;font-weight:700;color:var(--inc);background:var(--inc-soft);border-radius:999px;padding:0 7px;line-height:17px;vertical-align:1px}
+.incbtn{border:1px dashed var(--line-strong);background:var(--surface);color:var(--muted);font-size:10px;padding:0 6px;margin-left:8px;border-radius:999px;font-family:var(--f-body);opacity:0;line-height:17px}
+tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
+.incbtn:hover{color:var(--inc);border-color:var(--inc)}
+.g td.memo{background-image:linear-gradient(135deg,var(--warn) 6px,transparent 6px)}
+.legend .lm{color:var(--warn);font-size:10px}
+.memo-f{display:flex;align-items:center;gap:6px;flex:1 1 220px;min-width:0}
+.memo-f input{flex:1;min-width:0;font:inherit;border:1px solid var(--line-strong);border-radius:6px;padding:3px 8px;background:var(--surface);color:var(--ink)}
+.memo-f input:disabled{opacity:.5}
+.g tr.person td{font-weight:700;background:var(--surface)}
+.g tr.person td.pd{background:var(--good-soft)} .g tr.person td.ov{background:var(--bad-soft)}
+.g tr.part td{font-size:13px}
+.g tr.part td.c0{padding-left:40px}
+.g tr.part:not(.inc) td{background:var(--calc)}
+.g tr.part:not(.inc) td.pd{background:var(--good-soft)} .g tr.part:not(.inc) td.ov{background:var(--bad-soft)}
+.ptag{font-size:11px;color:var(--muted)}
+.sumtag{display:inline-block;margin-left:6px;font-size:10px;font-weight:400;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px;line-height:16px}
+.prow .bd{grid-column:1/-1;font-size:11px;color:var(--muted);font-family:var(--f-num)}
+/* payment panel */
+.phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.phead select{font:inherit;border:1px solid var(--line-strong);border-radius:6px;padding:3px 6px;background:var(--surface);color:var(--ink);max-width:100%}
+.psum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border-radius:8px;overflow:hidden}
+.psum span{background:var(--bg);padding:8px 10px;font-size:11px;color:var(--muted);display:grid;gap:2px;min-width:0}
+.psum b{font-family:var(--f-num);font-size:14px;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.psum .ok b{color:var(--good)} .psum .ng b{color:var(--bad)}
+.overline{font-size:12px;color:var(--bad);font-weight:700}
+.pbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;display:flex}
+.pbar i{display:block;height:100%}
+.pbar .p{background:var(--good)} .pbar .o{background:var(--bad)}
+.plist{display:grid}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0}
+.prow .nm{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .ct{font-size:11px;color:var(--muted)}
+.prow .amt{font-family:var(--f-num);text-align:right;font-variant-numeric:tabular-nums}
+.prow .ctl{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.prow .ctl .btn{margin-left:auto}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill.paid{background:var(--good-soft);color:var(--good)}
+.pill.due{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.pill.over{background:var(--bad-soft);color:var(--bad)}
+.pill.multi{background:var(--surface);color:var(--accent)}
+.empty{margin:0;font-size:12px;color:var(--muted);background:var(--bg);border-radius:8px;padding:12px}
+
+/* context menu + toast */
+.ctx{position:fixed;z-index:20;min-width:220px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(10,15,30,.22);padding:5px;display:grid}
+.ctx button{border:0;background:transparent;text-align:left;padding:7px 12px;border-radius:6px;font-size:13px;display:flex;justify-content:space-between;gap:16px}
+.ctx button:hover,.ctx button:focus-visible{background:var(--accent-soft);color:var(--accent);outline:none}
+.ctx button.danger{color:var(--bad)}
+.ctx button.danger:hover{background:var(--bad-soft);color:var(--bad)}
+.ctx button:disabled{opacity:.35;cursor:default;background:transparent;color:inherit}
+.ctx .k{color:var(--muted);font-family:var(--f-num);font-size:11px}
+.ctx hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+.ctx .ttl{font-size:11px;color:var(--muted);padding:4px 12px 2px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:999px;font-size:12px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+</style>
+
+<header class="masthead">
+  <div class="mh">
+    <div class="mh-top">
+      <div><div class="eyebrow">副業総合支援事業部 · LBS組み込み前デモ</div><h1>事業部予算管理</h1></div>
+      <div class="mh-actions">
+        <button class="mbtn" id="btnRules" type="button">使い方・ルール</button>
+        <button class="mbtn" id="btnData" type="button">データ</button>
+      </div>
+    </div>
+    <div class="kpi-head" id="kpiHead"></div>
+    <div class="kpis" id="kpis"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="panel" id="rulesPanel" hidden>
+    <h3>計算ルール</h3>
+    <div class="rules">
+      <div class="rule"><b>目標粗利</b>目標件数 × 単価</div>
+      <div class="rule"><b>経費</b>メンバーや項目ごとの明細の合計。明細は「=36*0.7*250」のように式でも入力できます</div>
+      <div class="rule"><b>税引前利益</b>粗利 − 経費（目標は目標粗利、実績は実績粗利から経費明細を引く）</div>
+      <div class="rule"><b>支払い状況</b>経費明細のセルごとに「支払い前／支払済（支払日）」を記録。支払期限は各月の月末で、過ぎても未払いなら期限超過</div>
+      <div class="rule"><b>インセンティブ</b>メンバーの行の「＋インセンティブ」で、そのメンバーが「合計（基本報酬＋インセンティブ）」と内訳2行の表示になります。金額・支払い状況・メモは内訳ごとに記録でき、合計の行で2つまとめて支払済にもできます</div>
+      <div class="rule"><b>純利益</b>税引前 − 消費税 − 法人税。税は税引前にかけ、赤字の月は0円</div>
+    </div>
+    <h3>操作</h3>
+    <div class="keys">
+      <span><kbd>↑↓←→</kbd> 移動</span><span><kbd>Shift</kbd>+矢印・ドラッグ 範囲選択</span>
+      <span>そのまま入力／<kbd>Enter</kbd>／ダブルクリック 編集</span><span><kbd>Tab</kbd> 右へ</span>
+      <span><kbd>Delete</kbd> 消去</span><span><kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>V</kbd> コピー・貼り付け（スプシから直接OK）</span>
+      <span><kbd>Ctrl</kbd>+<kbd>D</kbd> 下へコピー</span><span><kbd>Ctrl</kbd>+<kbd>R</kbd> 右へコピー</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 元に戻す</span>
+      <span>Q計の見出しをクリック その四半期の月を折りたたみ・展開</span><span>「＋ Qを追加」 次の3か月を追加（前月の目標・経費を引き継ぎ）</span>
+      <span>右クリック（スマホは長押し） 行の挿入・複製・移動・削除</span><span><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>=</kbd> 行を挿入</span><span><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>−</kbd> 行を削除</span>
+      <span>項目名・グループ名・サービス名もセルと同じように書き換えられます</span>
+    </div>
+  </section>
+
+  <section class="panel" id="dataPanel" hidden>
+    <h3>データ</h3>
+    <p style="margin:0;font-size:12px;color:var(--muted)">入力内容はこのブラウザに自動保存されます。別の端末へ移すときは、コピーしたデータを移動先で貼り付けて読み込んでください。</p>
+    <textarea id="dataBox" placeholder="書き出したデータをここに貼り付けると読み込めます"></textarea>
+    <div class="toolbar">
+      <button class="btn" id="exportData" type="button">データをコピー</button>
+      <button class="btn" id="importData" type="button">貼り付けたデータを読み込む</button>
+      <button class="btn" id="resetData" type="button">サンプルに戻す</button>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="tgroup"><button class="btn" id="undo" type="button" title="元に戻す（Ctrl+Z）">↶ 元に戻す</button></div>
+    <div class="tgroup">
+      <button class="btn" id="rowIns" type="button" title="選択中の行の下に追加（Ctrl+Alt+=）">＋ 行を挿入</button>
+      <button class="btn" id="rowDel" type="button" title="選択中の行を削除（Ctrl+Alt+−）">− 行を削除</button>
+      <button class="btn" id="incBtn" type="button" title="選択中のメンバーにインセンティブ行を追加">＋ インセンティブ</button>
+      <button class="btn" id="addQ" type="button" title="次の四半期（3か月分）を追加。前月の目標と経費を引き継ぎます">＋ Qを追加</button>
+      <button class="btn" id="addMonth" type="button" title="1か月だけ追加。前月の目標と経費を引き継ぎます">＋ 月を追加</button>
+    </div>
+    <div class="tgroup" aria-label="月の表示">
+      <span class="tlab">月の表示</span>
+      <button class="btn" id="colOpen" type="button">すべて開く</button>
+      <button class="btn" id="colNow" type="button">今のQだけ開く</button>
+      <button class="btn" id="colClose" type="button">Q計だけ</button>
+    </div>
+    <div class="tgroup">
+      <label class="tax">消費税<input id="taxCt" inputmode="decimal">%</label>
+      <label class="tax">法人税<input id="taxCorp" inputmode="decimal">%</label>
+    </div>
+    <div class="legend"><span><i class="lp">✓</i>支払済</span><span><i class="lo">!</i>期限超過</span><span><i class="ln">●</i>式が入っているセル</span><span><i class="lm">◤</i>メモあり</span></div>
+  </div>
+
+  <div class="layout">
+    <div class="sheet">
+      <div class="inspector">
+        <div class="fxname" id="fxname"></div>
+        <div class="fxlabel">fx</div>
+        <input id="fx" autocomplete="off" aria-label="選択中のセルの値">
+      </div>
+      <div class="paybar" id="paybar" hidden>
+        <span id="payChip"></span>
+        <label>支払日 <input type="date" id="payDate"></label>
+        <button class="btn solid" id="payMark" type="button">支払済にする</button>
+        <button class="btn" id="payUndo" type="button">支払い前に戻す</button>
+        <label class="memo-f">メモ <input id="payMemo" autocomplete="off"></label>
+      </div>
+      <div class="gridwrap" id="gridwrap"><table class="g" id="grid"></table></div>
+      <div class="status"><span id="statusL">セルを選んで入力してください</span><span id="statusR"></span></div>
+    </div>
+    <aside class="aside"><section class="panel" id="payPanel"></section></aside>
+  </div>
+</div>
+<div class="ctx" id="ctx" role="menu" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const KEY = "cc-budget-sheet-v2";
+let uidN = 0; const uid = () => "x" + Date.now().toString(36) + (uidN++);
+
+/* ---------- seed (スプシの内容) ---------- */
+function seed(){
+  const months = ["2026-10","2026-11","2026-12","2027-01","2027-02","2027-03","2027-04","2027-05","2027-06"];
+  const V = arr => Object.fromEntries(months.map((k,i) => [k, arr[i]]).filter(([,v]) => v !== null && v !== undefined));
+  const oct = (a, b) => V(months.map((k,i) => i === 0 ? a : b));   // 10月はa、11月以降はb
+  const item = (name, vals) => ({id:uid(), name, vals});
+  const cw = (o, n) => oct(o, `=${n}*0.7*250`);
+  return {
+    settings:{ct:10, corp:33}, months,
+    services:[
+      {id:"mnp", name:"MNP",          price:50000,  counts:V([6,6,6,6,6,6,6,6,6]),               actual:{}},
+      {id:"aff", name:"アフィリ",      price:5000,   counts:V([30,30,30,30,30,30,30,30,30]),      actual:{}},
+      {id:"ais", name:"AI（サブスク）", price:5500,   counts:V([0,40,140,200,250,300,300,300,300]), actual:{}},
+      {id:"aih", name:"AI（高単価）",   price:600000, counts:V([0,0,0,1,3,5,8,11,15]),             actual:{}}
+    ],
+    cats:[
+      {id:uid(), name:"固定販管費", items:[item("山本 固定給", oct(110000,110000))]},
+      {id:uid(), name:"人件費（採用）", items:[
+        item("佐々木真由", oct(80000,80000)), item("安嶋凛音", oct(22000,22000)),
+        item("若木啓輔", oct(43000,40000)), item("佐藤舞花", oct(11000,30000))]},
+      {id:uid(), name:"人件費（CW）", items:[
+        item("河野百香", cw(7200,36)), item("大塚夕夏", cw(8200,41)), item("早藤美和", cw(13200,66)),
+        item("中村仁美", cw(6000,30)), item("村上遥香", cw(3000,15))]},
+      {id:uid(), name:"固定費（公式LINE等）", items:[
+        item("アフィリ公式LINE", oct(5500,5500)), item("SNS公式LINE", oct(5500,5500)), item("MNP公式LINE（10月で廃止）", oct(5500,null))]},
+      {id:uid(), name:"経費（飯フォロー等）", items:[item("飯フォローなど", oct(25108,null))]}
+    ]
+  };
+}
+
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)) } catch(e) { S = null }
+if (!S || !S.months || !S.cats) S = seed();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch(e) {} };
+const hist = [];
+function mutate(fn){ hist.push(JSON.stringify(S)); if (hist.length > 80) hist.shift(); fn(); save(); render(); }
+function undo(){ if (!hist.length) return toast("これ以上戻せません"); S = JSON.parse(hist.pop()); save(); render(); toast("元に戻しました"); }
+
+/* ---------- 値の評価 ---------- */
+const zen = s => String(s).replace(/[０-９．＋－＊／（）＝％，]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+const toNum = v => { const s = zen(v).replace(/[^\d.\-]/g,""); if (s === "" || s === "-") return null; const n = Number(s); return isFinite(n) ? n : null; };
+function ev(raw){
+  if (raw === null || raw === undefined || raw === "") return null;
+  if (typeof raw === "number") return raw;
+  const s = zen(raw).trim();
+  if (s.startsWith("=")) {
+    const e = s.slice(1).replace(/[,¥\s]/g,"").replace(/%/g,"/100");
+    if (!/^[\d+\-*/().]+$/.test(e)) return NaN;
+    try { const n = Function("return (" + e + ")")(); return isFinite(n) ? n : NaN; } catch(err) { return NaN; }
+  }
+  return toNum(s);
+}
+const nz = v => (v === null || isNaN(v)) ? 0 : v;
+const mLabel = k => { const [y,m] = k.split("-").map(Number); return {y, m, short:m + "月", long:`${y}年${m}月`, q:`${y}.${Math.ceil(m/3)}Q`, qs:`${Math.ceil(m/3)}Q計`}; };
+const nextKey = k => { let [y,m] = k.split("-").map(Number); m++; if (m > 12) { m = 1; y++; } return `${y}-${String(m).padStart(2,"0")}`; };
+
+/* ---------- 月ごとの集計 ---------- */
+const gT = k => S.services.reduce((a,s) => a + nz(ev(s.counts[k])) * s.price, 0);
+const hasA = k => S.services.some(s => ev(s.actual[k]) !== null);
+const gA = k => S.services.reduce((a,s) => a + nz(ev(s.actual[k])), 0);
+const allItems = c => c.items.flatMap(it => it.inc ? [it, it.inc] : [it]);
+const findItem = id => S.cats.flatMap(allItems).find(i => i.id === id);
+const parentOf = inc => S.cats.flatMap(c => c.items).find(it => it.inc === inc);
+const newInc = () => ({id:uid(), name:"インセンティブ", isInc:true, vals:{}, paid:{}, notes:{}});
+const catSum = (c,k) => allItems(c).reduce((a,it) => a + nz(ev(it.vals[k])), 0);
+const incSum = k => S.cats.reduce((a,c) => a + c.items.reduce((b,it) => b + (it.inc ? nz(ev(it.inc.vals[k])) : 0), 0), 0);
+function personState(it, k){
+  const parts = [it, it.inc].filter(Boolean).map(p => payState(p, k)).filter(Boolean);
+  if (!parts.length) return null;
+  const a = parts.reduce((x,p) => x + p.a, 0);
+  const s = parts.every(p => p.s === "paid") ? "paid" : parts.some(p => p.s === "over") ? "over" : "due";
+  const date = s === "paid" ? parts.map(p => p.date).sort().pop() : null;
+  const partPaid = s !== "paid" && parts.some(p => p.s === "paid");
+  return {s, a, date, partPaid, base: payState(it, k), inc: it.inc ? payState(it.inc, k) : null};
+}
+const hasInc = () => S.cats.some(c => c.items.some(it => it.inc));
+const expA = k => S.cats.reduce((a,c) => a + catSum(c,k), 0);
+function pl(g, e){ const pre = g - e, ct = pre > 0 ? pre * S.settings.ct / 100 : 0, corp = pre > 0 ? pre * S.settings.corp / 100 : 0; return {g, e, pre, ct, corp, net: pre - ct - corp}; }
+const plT = k => pl(gT(k), expA(k));
+const plA = k => hasA(k) ? pl(gA(k), expA(k)) : null;
+
+/* ---------- 支払い状況 ---------- */
+const pad = n => String(n).padStart(2,"0");
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const monthEnd = k => { const [y,m] = k.split("-").map(Number); return `${y}-${pad(m)}-${pad(new Date(y, m, 0).getDate())}`; };
+const fmtDate = d => { const p = String(d).split("-"); return p.length === 3 ? `${+p[1]}/${+p[2]}` : d; };
+function payState(it, k){
+  const a = ev(it.vals[k]); if (a === null || isNaN(a) || a === 0) return null;
+  const d = it.paid && it.paid[k];
+  if (d) return {s:"paid", date:d, a};
+  return {s: todayStr() > monthEnd(k) ? "over" : "due", a};
+}
+const PAYLABEL = {paid:"支払済", due:"支払い前", over:"期限超過"};
+const paidSum = k => S.cats.reduce((x,c) => x + allItems(c).reduce((y,it) => { const p = payState(it,k); return y + (p && p.s === "paid" ? p.a : 0); }, 0), 0);
+function setPaid(it, k, date){ it.paid = it.paid || {}; if (date) it.paid[k] = date; else delete it.paid[k]; }
+
+/* ---------- 行と列 ---------- */
+let R = [], C = [];
+function buildRows(){
+  R = [];
+  const SEC_HUES = ["blue","teal","green","red","violet","amber"]; let secN = 0;
+  const sec = label => R.push({kind:"sec", label, hue: SEC_HUES[secN++ % SEC_HUES.length]});
+  const calc = (label, f, o = {}) => R.push({kind:"calc", label, f, ...o});
+  sec("目標件数");
+  S.services.forEach(s => R.push({kind:"in", label:s.name, src:s.counts, svc:s, svcRef:s, path:"件数"}));
+  sec("目標粗利（件数 × 単価）");
+  S.services.forEach(s => calc(s.name, k => nz(ev(s.counts[k])) * s.price, {svcRef:s}));
+  calc("合計", gT, {cls:"sub"});
+  sec("実績粗利");
+  S.services.forEach(s => R.push({kind:"in", label:s.name, src:s.actual, svcRef:s, path:"実績"}));
+  calc("合計", k => hasA(k) ? gA(k) : null, {cls:"sub"});
+  calc("達成率", k => hasA(k) && gT(k) ? gA(k) / gT(k) : null, {pct:true, cls:"dim",
+    q: ks => { const a = ks.filter(hasA); const t = a.reduce((x,k) => x + gT(k), 0); return a.length && t ? a.reduce((x,k) => x + gA(k), 0) / t : null; }});
+  sec("経費");
+  S.cats.forEach(c => {
+    calc(c.name, k => catSum(c,k), {cls:"cat", cat:c, catHead:true});
+    c.items.forEach(it => {
+      if (!it.inc) { R.push({kind:"in", label:it.name, src:it.vals, item:it, cat:c, cls:"item", path:c.name}); return; }
+      R.push({kind:"calc", label:it.name, person:it, cat:c, cls:"item person", path:c.name, f: k => { const a = ev(it.vals[k]), b = ev(it.inc.vals[k]); return a === null && b === null ? null : nz(a) + nz(b); }});
+      R.push({kind:"in", label:"基本報酬", src:it.vals, item:it, baseOf:it, cat:c, cls:"item part", path:it.name});
+      R.push({kind:"in", label:"インセンティブ", src:it.inc.vals, item:it.inc, incOf:it, cat:c, cls:"item inc part", path:it.name});
+    });
+  });
+  calc("経費合計（明細）", expA, {cls:"total"});
+  if (hasInc()) calc("└ うちインセンティブ", incSum, {cls:"dim", path:"経費"});
+  calc("└ 支払済", paidSum, {cls:"dim", path:"支払い"});
+  calc("└ 未払い", k => expA(k) - paidSum(k), {cls:"dim", path:"支払い"});
+  sec("損益（目標）");
+  calc("粗利", k => plT(k).g); calc("経費", k => plT(k).e);
+  calc("税引前利益", k => plT(k).pre, {cls:"sub"});
+  calc(`消費税 ${S.settings.ct}%`, k => plT(k).ct, {cls:"dim"}); calc(`法人税 ${S.settings.corp}%`, k => plT(k).corp, {cls:"dim"});
+  calc("純利益", k => plT(k).net, {cls:"total profit"});
+  sec("損益（実績）※実績粗利を入れた月だけ表示");
+  const A = f => k => { const p = plA(k); return p ? f(p) : null; };
+  calc("粗利", A(p => p.g)); calc("経費（明細）", A(p => p.e));
+  calc("税引前利益", A(p => p.pre), {cls:"sub"});
+  calc(`消費税 ${S.settings.ct}%`, A(p => p.ct), {cls:"dim"}); calc(`法人税 ${S.settings.corp}%`, A(p => p.corp), {cls:"dim"});
+  calc("純利益", A(p => p.net), {cls:"total profit"});
+  const out = []; let curSec = null;
+  R.forEach(row => { row.hue = row.hue || (row.cat ? catHue(row.cat) : curSec ? curSec.hue : null); if (row.kind === "sec") { curSec = row; row.n = 0; out.push(row); } else { if (curSec) curSec.n++; if (!curSec || !collapsed.has(curSec.label)) out.push(row); } });
+  R = out;
+}
+const CAT_HUES = ["slate","violet","pink","amber","teal","blue","green"];
+const catHue = c => CAT_HUES[Math.max(0, S.cats.indexOf(c)) % CAT_HUES.length];
+const hueStyle = h => h ? ` style="--rc:var(--c-${h});--rs:var(--c-${h}-s)"` : "";
+let collapsed = new Set();
+try { collapsed = new Set(JSON.parse(localStorage.getItem(KEY + "-ui") || "[]")); } catch(e) {}
+function toggleSec(label){ collapsed.has(label) ? collapsed.delete(label) : collapsed.add(label); try { localStorage.setItem(KEY + "-ui", JSON.stringify([...collapsed])); } catch(e) {} render(); }
+const NOW = () => todayStr().slice(0,7);
+let collapsedQ = new Set();
+try { collapsedQ = new Set(JSON.parse(localStorage.getItem(KEY + "-uiq") || "[]")); } catch(e) {}
+const quarters = () => { const g = []; S.months.forEach(k => { const q = mLabel(k).q; let last = g[g.length - 1]; if (!last || last.q !== q) g.push(last = {q, ks:[]}); last.ks.push(k); }); return g; };
+function buildCols(){
+  C = [{t:"name"}, {t:"price"}];
+  quarters().forEach(({q, ks}) => {
+    const closed = collapsedQ.has(q);
+    if (!closed) ks.forEach(k => C.push({t:"m", k}));
+    C.push({t:"q", q, ks, closed});
+  });
+  C.push({t:"tot", ks:[...S.months]});
+}
+const colKey = col => col ? col.t + ":" + (col.k || col.q || "") : "";
+function setQuarters(fn, msg){
+  const before = C[cur.c], key = colKey(before), qOf = before && (before.k ? mLabel(before.k).q : before.q);
+  fn(); try { localStorage.setItem(KEY + "-uiq", JSON.stringify([...collapsedQ])); } catch(e) {}
+  render();
+  let idx = C.findIndex(c => colKey(c) === key);
+  if (idx < 0 && qOf) idx = C.findIndex(c => c.t === "q" && c.q === qOf);
+  if (idx >= 0) { cur.c = idx; anc = {...cur}; paintSel(false); }
+  if (msg) toast(msg);
+}
+const toggleQ = q => setQuarters(() => collapsedQ.has(q) ? collapsedQ.delete(q) : collapsedQ.add(q));
+function value(r, c){
+  const row = R[r], col = C[c];
+  if (col.t === "name") return row.label;
+  if (col.t === "price") return row.svc ? row.svc.price : null;
+  if (col.t === "m") return row.kind === "in" ? ev(row.src[col.k]) : row.f(col.k);
+  if (row.q) return row.q(col.ks);
+  const vs = col.ks.map(k => row.kind === "in" ? ev(row.src[k]) : row.f(k)).filter(v => v !== null && !isNaN(v));
+  return vs.length ? vs.reduce((a,b) => a + b, 0) : null;
+}
+const editable = (r, c) => { const row = R[r], col = C[c]; return (col.t === "m" && row.kind === "in") || (col.t === "price" && !!row.svc) || (col.t === "name" && ((!!row.item && !row.incOf && !row.baseOf) || !!row.person || !!row.svc || !!row.catHead)); };
+function getRaw(r, c){ const row = R[r], col = C[c];
+  if (col.t === "name") return row.person ? row.person.name : (row.incOf || row.baseOf) ? row.label : row.item ? row.item.name : row.svc ? row.svc.name : row.catHead ? row.cat.name : row.label;
+  if (col.t === "price") return row.svc ? row.svc.price : "";
+  if (col.t === "m" && row.kind === "in") { const v = row.src[col.k]; return v === undefined || v === null ? "" : v; }
+  return "";
+}
+function setRaw(r, c, text){
+  const row = R[r], col = C[c]; text = String(text ?? "").trim();
+  if (col.t === "name") { const t = text || "（名称未設定）"; if (row.incOf || row.baseOf) return; if (row.person) { row.person.name = t; return; } if (row.item) row.item.name = t; else if (row.svc) row.svc.name = t; else if (row.catHead) row.cat.name = t; return; }
+  if (col.t === "price") { if (row.svc) row.svc.price = toNum(text) ?? 0; return; }
+  if (text === "") { delete row.src[col.k]; return; }
+  const z = zen(text);
+  if (z.startsWith("=")) row.src[col.k] = z; else { const n = toNum(z); if (n === null) delete row.src[col.k]; else row.src[col.k] = n; }
+}
+const fmtV = (v, row) => v === null || v === undefined ? "" : isNaN(v) ? "#ERR" : row && row.pct ? Math.round(v * 100) + "%" : Math.round(v).toLocaleString("ja-JP");
+const isSel = r => R[r] && R[r].kind !== "sec";
+
+/* ---------- 選択 ---------- */
+let cur = {r:1, c:2}, anc = {r:1, c:2}, editing = null;
+const rng = () => ({r0:Math.min(cur.r,anc.r), r1:Math.max(cur.r,anc.r), c0:Math.min(cur.c,anc.c), c1:Math.max(cur.c,anc.c)});
+function stepRow(r, d){ let n = r; do { n += d; } while (n >= 0 && n < R.length && !isSel(n)); return (n < 0 || n >= R.length) ? r : n; }
+function move(dr, dc, extend){
+  let r = cur.r, c = cur.c;
+  if (dr) r = stepRow(r, dr);
+  if (dc) c = Math.max(0, Math.min(C.length - 1, c + dc));
+  cur = {r, c}; if (!extend) anc = {r, c};
+  paintSel(true);
+}
+
+/* ---------- 描画 ---------- */
+function render(){
+  buildRows(); buildCols();
+  if (!isSel(cur.r) || cur.r >= R.length) cur.r = stepRow(-1, 1);
+  if (!isSel(anc.r) || anc.r >= R.length) anc = {...cur};
+  cur.c = Math.min(cur.c, C.length - 1); anc.c = Math.min(anc.c, C.length - 1);
+  const nowK = NOW();
+  const head = C.map((col, i) => {
+    if (col.t === "name") return `<th class="c0">項目</th>`;
+    if (col.t === "price") return `<th>単価</th>`;
+    if (col.t === "m") { const L = mLabel(col.k), first = C.findIndex(x => x.t === "m") === i; return `<th class="${col.k === nowK ? "now" : ""}">${first || L.m === 1 ? `<span class="yy">${L.y}</span>` : ""}${L.short}</th>`; }
+    if (col.t === "q") { const L = mLabel(col.ks[0]), L2 = mLabel(col.ks[col.ks.length - 1]);
+      return `<th class="q tot qh${col.closed ? " closed" : ""}"><button type="button" class="qtog" data-q="${col.q}" title="${col.closed ? "月を開く" : "月を折りたたむ"}" aria-expanded="${!col.closed}"><span class="yy">${L.y} ${L.m}–${L2.m}月</span><span class="qarrow">${col.closed ? "▸" : "◂"}</span>${L.qs}</button></th>`; }
+    return `<th class="q tot">合計</th>`;
+  }).join("");
+  const body = R.map((row, r) => {
+    if (row.kind === "sec") { const closed = collapsed.has(row.label);
+      return `<tr class="sec${closed ? " closed" : ""}"${hueStyle(row.hue)} data-sec="${esc(row.label)}" title="${closed ? "クリックで開く" : "クリックで閉じる"}"><td class="c0" colspan="2"><span class="chev">▾</span>${esc(row.label)}<span class="cnt">${row.n}行</span></td><td colspan="${C.length - 2}"></td></tr>`; }
+    return `<tr class="${row.cls || ""}"${hueStyle(row.hue)}>` + C.map((col, c) => {
+      const v = value(r, c), ed = editable(r, c);
+      const cls = [c === 0 ? "c0" : "", col.t === "price" ? "price" : "", col.t === "q" ? "q" : "", col.t === "tot" ? "tot" : "",
+        !row.person && ((!ed && c > 0 && col.t === "m") || (c === 0 && row.kind === "calc")) ? "calc" : "",
+        typeof v === "number" && v < 0 && !row.pct ? "neg" : "", typeof v === "number" && isNaN(v) ? "err" : "",
+        col.t === "m" && row.kind === "in" && typeof row.src[col.k] === "string" ? "fx" : "",
+        ed && c > 0 ? "inp" : "", col.t === "m" && col.k === nowK ? "now" : "", col.closed ? "qclosed" : ""];
+      let title = "";
+      if (row.person && col.t === "m") {
+        const ps = personState(row.person, col.k);
+        if (ps) { cls.push(ps.s === "paid" ? "pd" : ps.s === "over" ? "ov" : "");
+          title = `${PAYLABEL[ps.s]}${ps.partPaid ? "（一部支払済）" : ""}\n基本 ¥${Math.round(ps.base ? ps.base.a : 0).toLocaleString("ja-JP")} ＋ インセンティブ ¥${Math.round(ps.inc ? ps.inc.a : 0).toLocaleString("ja-JP")}`; }
+      }
+      if (row.item && col.t === "m") {
+        const ps = payState(row.item, col.k); if (ps) { cls.push(ps.s === "paid" ? "pd" : ps.s === "over" ? "ov" : ""); title = ps.s === "paid" ? `支払済 ${fmtDate(ps.date)}` : PAYLABEL[ps.s]; }
+        const memo = row.item.notes && row.item.notes[col.k]; if (memo) { cls.push("memo"); title = (title ? title + "\n" : "") + "メモ：" + esc(memo); }
+      }
+      const clsStr = cls.filter(Boolean).join(" ");
+      let inner;
+      if (c === 0) {
+        inner = esc(row.label);
+        if (row.incOf) inner = `<button type="button" class="del" data-delinc="${row.incOf.id}" title="インセンティブ行を削除" aria-label="${esc(row.incOf.name)}のインセンティブを削除">×</button><span class="tag">インセンティブ</span>`;
+        else if (row.baseOf) inner = `<span class="ptag">基本報酬</span>`;
+        else if (row.person) inner = `<button type="button" class="del" data-del="${row.person.id}" title="この行を削除" aria-label="${esc(row.label)}を削除">×</button>${esc(row.label)}<span class="sumtag">合計</span>`;
+        else if (row.item) inner = `<button type="button" class="del" data-del="${row.item.id}" title="この行を削除" aria-label="${esc(row.label)}を削除">×</button>` + inner + (row.item.inc ? "" : `<button type="button" class="incbtn" data-inc="${row.item.id}" title="インセンティブ行を追加">＋インセンティブ</button>`);
+        if (row.cat && row.kind === "calc") inner += `<button type="button" class="rowbtn" data-add="${row.cat.id}">＋行</button>`;
+      } else inner = col.t === "price" && !row.svc ? "" : fmtV(v, row);
+      return `<td class="${clsStr}" data-r="${r}" data-c="${c}"${title ? ` title="${title}"` : ""}>${inner}</td>`;
+    }).join("") + `</tr>`;
+  }).join("");
+  document.getElementById("grid").innerHTML = `<thead><tr>${head}</tr></thead><tbody>${body}</tbody>`;
+  document.getElementById("taxCt").value = S.settings.ct;
+  document.getElementById("taxCorp").value = S.settings.corp;
+  document.getElementById("undo").disabled = !hist.length;
+  renderPay();
+  paintSel(false);
+}
+const tdAt = (r, c) => document.querySelector(`#grid td[data-r="${r}"][data-c="${c}"]`);
+function paintSel(scroll){
+  document.querySelectorAll("#grid td.insel, #grid td.cur").forEach(td => td.classList.remove("insel","cur"));
+  const g = rng();
+  for (let r = g.r0; r <= g.r1; r++) { if (!isSel(r)) continue; for (let c = g.c0; c <= g.c1; c++) { const td = tdAt(r,c); if (td) td.classList.add("insel"); } }
+  const t = tdAt(cur.r, cur.c); if (t) { t.classList.add("cur"); if (scroll) t.scrollIntoView({block:"nearest", inline:"nearest"}); }
+  // formula bar
+  const row = R[cur.r], col = C[cur.c];
+  const where = col.t === "name" ? "項目名" : col.t === "price" ? "単価" : col.t === "m" ? mLabel(col.k).long : col.t === "q" ? col.q + " 計" : "合計";
+  document.getElementById("fxname").textContent = `${row.path ? row.path + " / " : ""}${row.label} ・ ${where}`;
+  const fx = document.getElementById("fx"), ed = editable(cur.r, cur.c);
+  fx.disabled = !ed;
+  fx.value = ed ? String(getRaw(cur.r, cur.c)) : (cur.c === 0 ? row.label : fmtV(value(cur.r, cur.c), row));
+  // status
+  const nums = []; let count = 0;
+  for (let r = g.r0; r <= g.r1; r++) { if (!isSel(r)) continue; for (let c = Math.max(g.c0,1); c <= g.c1; c++) { const v = value(r,c); if (typeof v === "number" && !isNaN(v) && !R[r].pct) nums.push(v); count++; } }
+  document.getElementById("statusL").textContent = ed ? "入力できるセルです（式は = から）" : "計算セル（自動）";
+  updatePayBar();
+  if (col.t === "m" && payMonth !== col.k) { payMonth = col.k; renderPay(); }
+  renderKpis(payMonth);
+  document.getElementById("statusR").innerHTML = nums.length > 1
+    ? `合計 <b>${Math.round(nums.reduce((a,b)=>a+b,0)).toLocaleString("ja-JP")}</b> ・ 平均 <b>${Math.round(nums.reduce((a,b)=>a+b,0)/nums.length).toLocaleString("ja-JP")}</b> ・ 個数 <b>${nums.length}</b>` : "";
+}
+/* ---------- 支払いバー（選択中のセル） ---------- */
+function payTargets(){
+  const out = [], seen = new Set();
+  const add = (it, k, label) => { const key = it.id + k; if (seen.has(key) || !payState(it, k)) return; seen.add(key); out.push({it, k, label}); };
+  forRange((r,c) => {
+    const row = R[r], col = C[c]; if (col.t !== "m") return;
+    if (row.person) { add(row.person, col.k, row.person.name + "の基本報酬"); if (row.person.inc) add(row.person.inc, col.k, row.person.name + "のインセンティブ"); }
+    else if (row.item) add(row.item, col.k, row.incOf ? row.incOf.name + "のインセンティブ" : row.baseOf ? row.baseOf.name + "の基本報酬" : row.item.name);
+  });
+  return out;
+}
+function updatePayBar(){
+  const bar = document.getElementById("paybar"), t = payTargets();
+  const onPayRow = R[cur.r] && R[cur.r].item && C[cur.c].t === "m";
+  const onPerson = R[cur.r] && R[cur.r].person && C[cur.c].t === "m";
+  bar.hidden = !t.length && !onPayRow && !onPerson;
+  if (bar.hidden) return;
+  const memo = document.getElementById("payMemo"), single = onPayRow && cur.r === anc.r && cur.c === anc.c;
+  memo.disabled = !single;
+  if (onPerson && cur.r === anc.r && cur.c === anc.c) memo.placeholder = "メモは基本報酬かインセンティブの行で入力";
+  memo.value = single ? ((R[cur.r].item.notes || {})[C[cur.c].k] || "") : "";
+  if (!(onPerson && cur.r === anc.r && cur.c === anc.c)) memo.placeholder = single ? (R[cur.r].incOf ? "例：11月MNP目標達成ボーナス" : "支払いのメモ") : "1セルだけ選ぶと入力できます";
+  const chip = document.getElementById("payChip"), date = document.getElementById("payDate");
+  if (!t.length) { chip.innerHTML = `<span class="pill due">金額未入力</span>`; date.value = todayStr(); return; }
+  if (t.length === 1) {
+    const ps = payState(t[0].it, t[0].k);
+    chip.innerHTML = `<span class="pill ${ps.s}">${PAYLABEL[ps.s]}</span> <span class="mono">${esc(t[0].label)} ・ ${mLabel(t[0].k).short} ・ ¥${Math.round(ps.a).toLocaleString("ja-JP")}</span>`;
+    date.value = ps.s === "paid" ? ps.date : todayStr();
+  } else {
+    const n = t.filter(x => payState(x.it, x.k).s === "paid").length;
+    if (onPerson && cur.r === anc.r && cur.c === anc.c) {
+      const ps = personState(R[cur.r].person, C[cur.c].k);
+      chip.innerHTML = `<span class="pill ${ps.s}">${PAYLABEL[ps.s]}${ps.partPaid ? "（一部）" : ""}</span> <span class="mono">${esc(R[cur.r].person.name)} ・ ${mLabel(C[cur.c].k).short} ・ 合計 ¥${Math.round(ps.a).toLocaleString("ja-JP")}（基本＋インセンティブ）</span>`;
+      date.value = ps.date || todayStr(); return;
+    }
+    chip.innerHTML = `<span class="pill multi">${t.length}件選択</span> 支払済 ${n} ／ 未払い ${t.length - n}`;
+    date.value = todayStr();
+  }
+}
+
+/* ---------- 支払い一覧（月別） ---------- */
+let payMonth = null;
+function renderPay(){
+  if (!payMonth || !S.months.includes(payMonth)) {
+    const now = todayStr().slice(0,7);
+    payMonth = S.months.find(k => k >= now) || S.months[0];
+  }
+  const k = payMonth, rows = [];
+  let total = 0, paid = 0, over = 0;
+  const Y = n => "¥" + Math.round(n).toLocaleString("ja-JP");
+  S.cats.forEach(c => c.items.forEach(it => {
+    const ps = personState(it, k); if (!ps) return;
+    const parts = [ps.base, ps.inc].filter(Boolean);
+    total += ps.a; parts.forEach(p => { if (p.s === "paid") paid += p.a; if (p.s === "over") over += p.a; });
+    const ids = [it, it.inc].filter(p => p && payState(p, k)).map(p => p.id).join(",");
+    const memos = [it.notes && it.notes[k], it.inc && it.inc.notes && it.inc.notes[k]].filter(Boolean);
+    const breakdown = ps.inc ? `<div class="bd">基本 ${Y(ps.base ? ps.base.a : 0)} ＋ <span class="tag">インセンティブ</span> ${Y(ps.inc.a)}</div>` : "";
+    rows.push(`<div class="prow"${hueStyle(catHue(c))}>
+      <div style="min-width:0"><div class="nm">${esc(it.name)}</div><div class="ct">${esc(c.name)}${memos.length ? ` · ${esc(memos.join(" / "))}` : ""}</div></div>
+      <div class="amt">${Y(ps.a)}</div>
+      ${breakdown}
+      <div class="ctl">
+        <span class="pill ${ps.s}">${PAYLABEL[ps.s]}${ps.partPaid ? "（一部）" : ""}</span>
+        <input type="date" id="pd-${it.id}" data-pdate="${ids}" value="${ps.date || ""}" aria-label="${esc(it.name)}の支払日">
+        <button type="button" class="btn ${ps.s === "paid" ? "line" : "solid"}" data-ptoggle="${ids}" data-pname="${esc(it.name)}">${ps.s === "paid" ? "取り消す" : "支払済にする"}</button>
+      </div></div>`);
+  }));
+  const unpaid = total - paid;
+  document.getElementById("payPanel").innerHTML = `
+    <div class="phead">
+      <h3>支払い状況</h3>
+      <select id="payMonth" aria-label="対象月">${S.months.map(m => `<option value="${m}"${m === k ? " selected" : ""}>${mLabel(m).long}（${fmtDate(monthEnd(m))}期限）</option>`).join("")}</select>
+    </div>
+    <div class="psum">
+      <span>支払予定<b>${Y(total)}</b></span>
+      <span class="ok">支払済<b>${Y(paid)}</b></span>
+      <span class="${over ? "ng" : ""}">未払い<b>${Y(unpaid)}</b></span>
+    </div>
+    ${total ? `<div class="pbar" aria-hidden="true"><i class="p" style="width:${paid / total * 100}%"></i><i class="o" style="width:${over / total * 100}%"></i></div>` : ""}
+    ${over ? `<div class="overline">期限超過 ${Y(over)}（${fmtDate(monthEnd(k))}を過ぎています）</div>` : ""}
+    ${rows.length ? `<div class="plist">${rows.join("")}</div>
+      ${unpaid > 0 ? `<button type="button" class="btn line" id="payAll">未払いをまとめて支払済にする（${fmtDate(todayStr())}）</button>` : ""}`
+      : `<p class="empty">この月の経費明細はまだありません。シートの経費欄に金額を入れると、ここに支払先が並びます。</p>`}`;
+}
+
+/* ---------- 月サマリー（ヘッダー） ---------- */
+function renderKpis(k){
+  if (!k) return;
+  const Y = n => (n < 0 ? "−¥" : "¥") + Math.abs(Math.round(n)).toLocaleString("ja-JP");
+  const t = plT(k), a = plA(k), ex = expA(k), pd = paidSum(k);
+  let over = 0; S.cats.forEach(c => allItems(c).forEach(it => { const ps = payState(it, k); if (ps && ps.s === "over") over += ps.a; }));
+  const rate = a && gT(k) ? Math.round(gA(k) / gT(k) * 100) : null;
+  const L = mLabel(k);
+  document.getElementById("kpiHead").innerHTML = `<b>${L.long}</b><span>${k === NOW() ? "今月 · " : ""}シートで選んだ列の月を表示しています</span>`;
+  const tile = (lab, big, sub, meter = "") => `<div class="kpi"><div class="lab">${lab}</div><div class="big">${big}</div>${meter}<div class="sub">${sub}</div></div>`;
+  document.getElementById("kpis").innerHTML =
+    tile("粗利", a ? Y(gA(k)) : Y(gT(k)), a ? `目標 ${Y(gT(k))} · 達成率 ${rate}%` : "目標値（実績は未入力）",
+      a ? `<div class="meter"><i style="width:${Math.min(rate,100)}%"></i></div>` : "") +
+    tile("経費", Y(ex), `支払済 ${ex ? Math.round(pd / ex * 100) : 0}%${incSum(k) ? ` · うちインセンティブ ${Y(incSum(k))}` : ""}`, `<div class="meter"><i style="width:${ex ? Math.min(pd / ex * 100, 100) : 0}%"></i></div>`) +
+    tile("未払い", `<span class="${over ? "neg" : ex - pd === 0 && ex ? "ok" : ""}">${Y(ex - pd)}</span>`, over ? `うち期限超過 ${Y(over)}` : `支払済 ${Y(pd)} · 期限 ${fmtDate(monthEnd(k))}`) +
+    tile("税引前利益", `<span class="${(a ? a.pre : t.pre) < 0 ? "neg" : ""}">${Y(a ? a.pre : t.pre)}</span>`, a ? `目標 ${Y(t.pre)}` : "目標値") +
+    tile("純利益", `<span class="${(a ? a.net : t.net) < 0 ? "neg" : ""}">${Y(a ? a.net : t.net)}</span>`, a ? `目標 ${Y(t.net)}` : `目標値 · 税 ${S.settings.ct + S.settings.corp}%`);
+}
+const payPanel = document.getElementById("payPanel");
+payPanel.addEventListener("change", e => {
+  if (e.target.id === "payMonth") { payMonth = e.target.value; renderPay(); return; }
+  const ids = e.target.dataset.pdate; if (!ids) return;
+  const its = ids.split(",").map(findItem).filter(Boolean), nm = (its[0].isInc ? parentOf(its[0]) : its[0]).name;
+  mutate(() => its.forEach(it => setPaid(it, payMonth, e.target.value || null)));
+  toast(e.target.value ? `${nm}を支払済（${fmtDate(e.target.value)}）にしました` : `${nm}を支払い前に戻しました`);
+});
+payPanel.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "payAll") { mutate(() => S.cats.forEach(c => allItems(c).forEach(it => { const ps = payState(it, payMonth); if (ps && ps.s !== "paid") setPaid(it, payMonth, todayStr()); }))); toast("未払いをまとめて支払済にしました"); return; }
+  const ids = b.dataset.ptoggle; if (!ids) return;
+  const its = ids.split(",").map(findItem).filter(Boolean);
+  const allPaid = its.every(it => payState(it, payMonth).s === "paid");
+  mutate(() => its.forEach(it => setPaid(it, payMonth, allPaid ? null : (it.paid && it.paid[payMonth]) || todayStr())));
+  toast(allPaid ? `${b.dataset.pname}を支払い前に戻しました` : `${b.dataset.pname}を支払済にしました${its.length > 1 ? "（基本＋インセンティブ）" : ""}`);
+});
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+
+/* ---------- セル編集 ---------- */
+function startEdit(initial, selectAll){
+  if (!editable(cur.r, cur.c)) { toast("このセルは自動計算です"); return; }
+  anc = {...cur}; paintSel(false);
+  const td = tdAt(cur.r, cur.c); if (!td) return;
+  editing = {r:cur.r, c:cur.c};
+  td.classList.add("edit");
+  const v = initial !== undefined ? initial : String(getRaw(cur.r, cur.c));
+  td.innerHTML = `<input class="ed" id="cellEditor" autocomplete="off" value="${esc(v)}">`;
+  const inp = td.firstElementChild; inp.focus(); if (selectAll) inp.select(); else inp.setSelectionRange(inp.value.length, inp.value.length);
+  inp.addEventListener("keydown", e => {
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === "Enter") { e.preventDefault(); commit(inp.value); move(e.shiftKey ? -1 : 1, 0); }
+    else if (e.key === "Tab") { e.preventDefault(); commit(inp.value); move(0, e.shiftKey ? -1 : 1); }
+    else if (e.key === "Escape") { e.preventDefault(); editing = null; render(); }
+  });
+  inp.addEventListener("blur", () => { if (editing) commit(inp.value); });
+}
+function commit(text){
+  if (!editing) return; const {r, c} = editing; editing = null;
+  if (String(getRaw(r, c)) === String(text).trim()) { render(); return; }
+  mutate(() => setRaw(r, c, text));
+}
+
+/* ---------- マウス ---------- */
+const grid = document.getElementById("grid");
+let dragging = false, lastTap = null;
+grid.addEventListener("pointerdown", e => {
+  if (e.target.closest("button") || e.target.closest(".ed")) return;
+  const td = e.target.closest("td[data-r]"); if (!td) return;
+  if (editing) { const inp = document.getElementById("cellEditor"); if (inp) inp.blur(); }
+  const r = +td.dataset.r, c = +td.dataset.c;
+  const wasCur = cur.r === r && cur.c === c && anc.r === r && anc.c === c;
+  cur = {r, c}; if (!e.shiftKey) anc = {r, c};
+  paintSel(false);
+  if (e.pointerType === "mouse") { dragging = true; e.preventDefault(); }
+  lastTap = (e.pointerType !== "mouse" && wasCur) ? {r, c} : null;
+});
+grid.addEventListener("pointerover", e => {
+  if (!dragging) return; const td = e.target.closest("td[data-r]"); if (!td) return;
+  cur = {r:+td.dataset.r, c:+td.dataset.c}; paintSel(false);
+});
+document.addEventListener("pointerup", e => {
+  dragging = false;
+  if (lastTap && e.pointerType !== "mouse") { const t = lastTap; lastTap = null; if (t.r === cur.r && t.c === cur.c) startEdit(); }
+});
+grid.addEventListener("dblclick", e => { const td = e.target.closest("td[data-r]"); if (td && !e.target.closest("button")) startEdit(); });
+grid.addEventListener("click", e => {
+  const qb = e.target.closest("button[data-q]"); if (qb) { toggleQ(qb.dataset.q); return; }
+  const sr = e.target.closest("tr.sec"); if (sr) { toggleSec(sr.dataset.sec); return; }
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.add) mutate(() => { const c = S.cats.find(x => x.id === b.dataset.add); c.items.push({id:uid(), name:"新しい項目", vals:{}}); });
+  if (b.dataset.inc) { const it = findItem(b.dataset.inc); OPS.incAdd({item:it}); return; }
+  if (b.dataset.delinc) { const it = findItem(b.dataset.delinc); OPS.incDel({item:it}); return; }
+  if (b.dataset.del) mutate(() => { S.cats.forEach(c => c.items = c.items.filter(i => i.id !== b.dataset.del)); });
+});
+
+/* ---------- 行の操作 ---------- */
+function rowInfo(r){
+  const row = R[r]; if (!row) return null;
+  if (row.incOf) return {type:"inc", item:row.incOf, cat:row.cat, idx:row.cat.items.indexOf(row.incOf)};
+  if (row.person || row.baseOf) { const it = row.person || row.baseOf; return {type:"item", item:it, cat:row.cat, idx:row.cat.items.indexOf(it)}; }
+  if (row.item) return {type:"item", item:row.item, cat:row.cat, idx:row.cat.items.indexOf(row.item)};
+  if (row.catHead) return {type:"cat", cat:row.cat, idx:S.cats.indexOf(row.cat)};
+  if (row.svcRef) return {type:"svc", svc:row.svcRef, idx:S.services.indexOf(row.svcRef)};
+  return null;
+}
+function selectRow(pred, edit){
+  const r = R.findIndex(pred); if (r < 0) return;
+  cur = {r, c: edit ? 0 : cur.c}; anc = {...cur}; paintSel(true);
+  if (edit) startEdit(undefined, true);
+}
+const undoHint = "（Ctrl+Zで戻せます）";
+const OPS = {
+  incAdd: i => { if (!i.item.inc) mutate(() => i.item.inc = newInc()); const keepC = C[cur.c] && C[cur.c].t === "m" ? cur.c : C.findIndex(x => x.k === NOW()) ; selectRow(r => R[r].incOf === i.item); if (keepC > 0) { cur.c = keepC; anc = {...cur}; paintSel(true); } toast(`${i.item.name}のインセンティブ行を追加しました。金額とメモを入れてください`); },
+  incDel: i => { if (!i.item.inc) return; mutate(() => delete i.item.inc); toast(`${i.item.name}のインセンティブ行を削除しました${undoHint}`); },
+  itemAbove: i => { const it = {id:uid(), name:"新しい項目", vals:{}}; mutate(() => i.cat.items.splice(i.idx, 0, it)); selectRow(r => R[r].item === it, true); },
+  itemBelow: i => { const it = {id:uid(), name:"新しい項目", vals:{}}; mutate(() => i.cat.items.splice(i.idx + 1, 0, it)); selectRow(r => R[r].item === it, true); },
+  itemDup:   i => { const it = {id:uid(), name:i.item.name + "（コピー）", vals:{...i.item.vals}}; mutate(() => i.cat.items.splice(i.idx + 1, 0, it)); selectRow(r => R[r].item === it, true); },
+  itemUp:    i => { if (i.idx > 0) { mutate(() => { const a = i.cat.items; [a[i.idx-1], a[i.idx]] = [a[i.idx], a[i.idx-1]]; }); selectRow(r => R[r].item === i.item); } },
+  itemDown:  i => { if (i.idx < i.cat.items.length - 1) { mutate(() => { const a = i.cat.items; [a[i.idx+1], a[i.idx]] = [a[i.idx], a[i.idx+1]]; }); selectRow(r => R[r].item === i.item); } },
+  itemDel:   () => {
+    const g = rng(), ids = new Set(), incs = new Set();
+    for (let r = g.r0; r <= g.r1; r++) { if (!R[r]) continue; if (R[r].incOf) incs.add(R[r].incOf); else if (R[r].person || R[r].baseOf) ids.add((R[r].person || R[r].baseOf).id); else if (R[r].item) ids.add(R[r].item.id); }
+    if (!ids.size && !incs.size) return;
+    mutate(() => { incs.forEach(it => delete it.inc); S.cats.forEach(c => c.items = c.items.filter(it => !ids.has(it.id))); });
+    toast(`${ids.size}行を削除しました${undoHint}`);
+  },
+  catAddItem: i => { const it = {id:uid(), name:"新しい項目", vals:{}}; mutate(() => i.cat.items.push(it)); selectRow(r => R[r].item === it, true); },
+  catBelow:  i => { const c = {id:uid(), name:"新しいグループ", items:[]}; mutate(() => S.cats.splice(i.idx + 1, 0, c)); selectRow(r => R[r].catHead && R[r].cat === c, true); },
+  catRename: i => selectRow(r => R[r].catHead && R[r].cat === i.cat, true),
+  catUp:     i => { if (i.idx > 0) { mutate(() => { const a = S.cats; [a[i.idx-1], a[i.idx]] = [a[i.idx], a[i.idx-1]]; }); selectRow(r => R[r].catHead && R[r].cat === i.cat); } },
+  catDown:   i => { if (i.idx < S.cats.length - 1) { mutate(() => { const a = S.cats; [a[i.idx+1], a[i.idx]] = [a[i.idx], a[i.idx+1]]; }); selectRow(r => R[r].catHead && R[r].cat === i.cat); } },
+  catDel:    i => { mutate(() => S.cats.splice(i.idx, 1)); toast(`グループ「${i.cat.name}」を明細ごと削除しました${undoHint}`); },
+  svcBelow:  i => { const s = {id:uid(), name:"新しいサービス", price:0, counts:{}, actual:{}}; mutate(() => S.services.splice(i.idx + 1, 0, s)); selectRow(r => R[r].svc === s, true); toast("単価の列に1人あたりの単価を入れてください"); },
+  svcRename: i => selectRow(r => R[r].svc === i.svc, true),
+  svcUp:     i => { if (i.idx > 0) { mutate(() => { const a = S.services; [a[i.idx-1], a[i.idx]] = [a[i.idx], a[i.idx-1]]; }); selectRow(r => R[r].svc === i.svc); } },
+  svcDown:   i => { if (i.idx < S.services.length - 1) { mutate(() => { const a = S.services; [a[i.idx+1], a[i.idx]] = [a[i.idx], a[i.idx+1]]; }); selectRow(r => R[r].svc === i.svc); } },
+  svcDel:    i => { mutate(() => S.services.splice(i.idx, 1)); toast(`サービス「${i.svc.name}」を削除しました${undoHint}`); }
+};
+function menuItems(i){
+  if (!i) return null;
+  if (i.type === "item") return {title:`明細：${i.item.name}`, list:[
+    ["itemAbove","上に行を挿入"], ["itemBelow","下に行を挿入","Ctrl+Alt+="], ["itemDup","行を複製"], ["incAdd","インセンティブ行を追加", "", !!i.item.inc], "-",
+    ["itemUp","上へ移動", "", i.idx === 0], ["itemDown","下へ移動", "", i.idx === i.cat.items.length - 1], "-",
+    ["itemDel", rng().r0 !== rng().r1 ? "選択した行を削除" : "行を削除", "Ctrl+Alt+−", false, true]]};
+  if (i.type === "inc") return {title:`${i.item.name}のインセンティブ`, list:[
+    ["itemBelow","下にメンバー行を挿入"], "-", ["incDel","インセンティブ行を削除","Ctrl+Alt+−", false, true]]};
+  if (i.type === "cat") return {title:`グループ：${i.cat.name}`, list:[
+    ["catAddItem","このグループに行を追加","Ctrl+Alt+="], ["catBelow","下にグループを追加"], ["catRename","グループ名を変更"], "-",
+    ["catUp","グループを上へ", "", i.idx === 0], ["catDown","グループを下へ", "", i.idx === S.cats.length - 1], "-",
+    ["catDel","グループを削除（明細ごと）","", false, true]]};
+  return {title:`サービス：${i.svc.name}`, list:[
+    ["svcBelow","下にサービスを追加","Ctrl+Alt+="], ["svcRename","サービス名を変更"], "-",
+    ["svcUp","上へ移動", "", i.idx === 0], ["svcDown","下へ移動", "", i.idx === S.services.length - 1], "-",
+    ["svcDel","サービスを削除","Ctrl+Alt+−", false, true]]};
+}
+const ctx = document.getElementById("ctx");
+function openMenu(x, y){
+  const i = rowInfo(cur.r), m = menuItems(i);
+  if (!m) { toast("この行は自動計算のため追加・削除できません"); return; }
+  ctx.innerHTML = `<div class="ttl">${esc(m.title)}</div>` + m.list.map(it => it === "-" ? "<hr>" :
+    `<button type="button" role="menuitem" data-op="${it[0]}" class="${it[4] ? "danger" : ""}"${it[3] ? " disabled" : ""}><span>${it[1]}</span><span class="k">${it[2] || ""}</span></button>`).join("");
+  ctx.hidden = false;
+  const w = ctx.offsetWidth, h = ctx.offsetHeight;
+  ctx.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + "px";
+  ctx.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + "px";
+  const first = ctx.querySelector("button:not(:disabled)"); if (first) first.focus();
+}
+const closeMenu = () => { ctx.hidden = true; };
+ctx.addEventListener("click", e => {
+  const b = e.target.closest("button[data-op]"); if (!b || b.disabled) return;
+  const i = rowInfo(cur.r); closeMenu(); OPS[b.dataset.op](i);
+});
+ctx.addEventListener("keydown", e => {
+  const bs = [...ctx.querySelectorAll("button:not(:disabled)")], at = bs.indexOf(document.activeElement);
+  if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeMenu(); }
+  if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); bs[(at + 1) % bs.length].focus(); }
+  if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); bs[(at - 1 + bs.length) % bs.length].focus(); }
+});
+grid.addEventListener("contextmenu", e => {
+  const td = e.target.closest("td[data-r]"); if (!td) return;
+  e.preventDefault();
+  if (editing) { const inp = document.getElementById("cellEditor"); if (inp) inp.blur(); }
+  const r = +td.dataset.r, c = +td.dataset.c, g = rng();
+  if (!(r >= g.r0 && r <= g.r1 && c >= g.c0 && c <= g.c1)) { cur = {r, c}; anc = {r, c}; paintSel(false); }
+  else cur = {r, c};
+  openMenu(e.clientX, e.clientY);
+});
+document.addEventListener("pointerdown", e => { if (!ctx.hidden && !e.target.closest("#ctx")) closeMenu(); }, true);
+document.getElementById("gridwrap").addEventListener("scroll", closeMenu);
+function rowInsert(){
+  const i = rowInfo(cur.r);
+  if (!i) return toast("経費の明細・グループ・サービスの行を選んでください");
+  ({item:OPS.itemBelow, inc:OPS.itemBelow, cat:OPS.catAddItem, svc:OPS.svcBelow})[i.type](i);
+}
+function rowDelete(){
+  const i = rowInfo(cur.r);
+  if (!i) return toast("経費の明細・グループ・サービスの行を選んでください");
+  ({item:OPS.itemDel, inc:OPS.incDel, cat:OPS.catDel, svc:OPS.svcDel})[i.type](i);
+}
+
+/* ---------- キーボード ---------- */
+const typingElsewhere = () => { const a = document.activeElement; return a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.id !== "cellEditor"; };
+document.addEventListener("keydown", e => {
+  if (editing || typingElsewhere() || !ctx.hidden) return;
+  if (document.activeElement && document.activeElement.tagName === "BUTTON" && (e.key === "Enter" || e.key === " ")) return;
+  const mod = e.ctrlKey || e.metaKey;
+  const map = {ArrowUp:[-1,0], ArrowDown:[1,0], ArrowLeft:[0,-1], ArrowRight:[0,1]};
+  if (map[e.key]) { e.preventDefault(); move(...map[e.key], e.shiftKey); return; }
+  if (e.key === "Tab") { e.preventDefault(); move(0, e.shiftKey ? -1 : 1); return; }
+  if (e.key === "Enter") { e.preventDefault(); editable(cur.r,cur.c) ? startEdit() : move(1,0); return; }
+  if (e.key === "F2") { e.preventDefault(); startEdit(); return; }
+  if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); clearRange(); return; }
+  if (mod && e.altKey && (e.key === "=" || e.key === "+" || e.code === "Equal")) { e.preventDefault(); rowInsert(); return; }
+  if (mod && e.altKey && (e.key === "-" || e.code === "Minus")) { e.preventDefault(); rowDelete(); return; }
+  if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
+  if (mod && e.key.toLowerCase() === "d") { e.preventDefault(); fill("down"); return; }
+  if (mod && e.key.toLowerCase() === "r") { e.preventDefault(); fill("right"); return; }
+  if (mod && e.key.toLowerCase() === "a") { e.preventDefault(); anc = {r:stepRow(-1,1), c:1}; cur = {r:stepRow(R.length,-1), c:C.length-1}; paintSel(false); return; }
+  if (!mod && !e.altKey && e.key.length === 1 && editable(cur.r, cur.c)) { e.preventDefault(); startEdit(e.key); }
+});
+function forRange(fn){ const g = rng(); for (let r = g.r0; r <= g.r1; r++) { if (!isSel(r)) continue; for (let c = g.c0; c <= g.c1; c++) fn(r, c, g); } }
+function clearRange(){ let any = false; forRange((r,c) => { if (editable(r,c) && C[c].t === "m") any = true; }); if (!any) return toast("消せるのは入力セルだけです");
+  mutate(() => forRange((r,c) => { if (editable(r,c) && C[c].t === "m") setRaw(r, c, ""); })); }
+function fill(dir){
+  const g = rng();
+  if ((dir === "down" && g.r0 === g.r1) || (dir === "right" && g.c0 === g.c1)) return toast("2セル以上を選んでから使ってください");
+  mutate(() => forRange((r,c) => {
+    const sr = dir === "down" ? g.r0 : r, sc = dir === "right" ? g.c0 : c;
+    if ((r !== sr || c !== sc) && editable(r,c) && editable(sr,sc) && C[c].t === C[sc].t) setRaw(r, c, String(getRaw(sr, sc)));
+  }));
+  toast(dir === "down" ? "下へコピーしました" : "右へコピーしました");
+}
+document.addEventListener("copy", e => {
+  if (editing || typingElsewhere()) return;
+  const g = rng(), lines = [];
+  for (let r = g.r0; r <= g.r1; r++) { if (!isSel(r)) continue; const cells = [];
+    for (let c = g.c0; c <= g.c1; c++) { const v = value(r,c); cells.push(c === 0 ? R[r].label : (typeof v === "number" && !isNaN(v)) ? (R[r].pct ? Math.round(v*100)+"%" : Math.round(v)) : ""); }
+    lines.push(cells.join("\t")); }
+  e.clipboardData.setData("text/plain", lines.join("\n")); e.preventDefault(); toast("コピーしました");
+});
+document.addEventListener("paste", e => {
+  if (editing || typingElsewhere()) return;
+  const text = (e.clipboardData || window.clipboardData).getData("text"); if (!text) return;
+  e.preventDefault();
+  const data = text.replace(/\r/g,"").replace(/\n+$/,"").split("\n").map(l => l.split("\t"));
+  const g = rng();
+  mutate(() => {
+    if (data.length === 1 && data[0].length === 1 && (g.r0 !== g.r1 || g.c0 !== g.c1)) {
+      forRange((r,c) => { if (editable(r,c)) setRaw(r, c, data[0][0]); });
+    } else {
+      let r = g.r0;
+      data.forEach((cells, i) => {
+        if (i > 0) { const n = stepRow(r, 1); if (n === r) return; r = n; }
+        cells.forEach((v, j) => { const c = g.c0 + j; if (c < C.length && editable(r, c)) setRaw(r, c, v); });
+      });
+    }
+  });
+  toast("貼り付けました");
+});
+
+/* ---------- 数式バー ---------- */
+const fx = document.getElementById("fx");
+fx.addEventListener("keydown", e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === "Enter") { e.preventDefault(); const t = fx.value; fx.blur(); if (editable(cur.r,cur.c) && String(getRaw(cur.r,cur.c)) !== t.trim()) mutate(() => setRaw(cur.r, cur.c, t)); move(1,0); }
+  if (e.key === "Escape") { fx.blur(); paintSel(false); }
+});
+
+document.getElementById("payMemo").addEventListener("change", e => {
+  const row = R[cur.r], col = C[cur.c]; if (!row || !row.item || col.t !== "m") return;
+  const v = e.target.value.trim();
+  mutate(() => { row.item.notes = row.item.notes || {}; if (v) row.item.notes[col.k] = v; else delete row.item.notes[col.k]; });
+  toast(v ? "メモを保存しました" : "メモを消しました");
+});
+document.getElementById("payMemo").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) e.target.blur(); });
+document.getElementById("payDate").addEventListener("change", e => {
+  const t = payTargets();
+  if (t.length === 1 && payState(t[0].it, t[0].k).s === "paid" && e.target.value) {
+    mutate(() => setPaid(t[0].it, t[0].k, e.target.value)); toast(`支払日を${fmtDate(e.target.value)}に変更しました`);
+  }
+});
+
+/* 月の追加：直前の月の目標件数・経費明細（基本報酬）を引き継ぐ。実績・インセンティブ・支払い・メモは空のまま */
+function addMonths(n){
+  const added = [];
+  mutate(() => {
+    for (let i = 0; i < n; i++) {
+      const prev = S.months[S.months.length - 1], k = nextKey(prev);
+      S.months.push(k); added.push(k);
+      S.services.forEach(sv => { if (sv.counts[prev] !== undefined) sv.counts[k] = sv.counts[prev]; });
+      S.cats.forEach(c => c.items.forEach(it => { if (it.vals[prev] !== undefined) it.vals[k] = it.vals[prev]; }));
+    }
+  });
+  return added;
+}
+
+/* ---------- ツールバー ---------- */
+function toast(msg){ const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 1600); }
+function taxInput(id, key){ document.getElementById(id).addEventListener("change", e => { const n = toNum(e.target.value); if (n === null) { e.target.value = S.settings[key]; return; } mutate(() => S.settings[key] = n); }); }
+taxInput("taxCt","ct"); taxInput("taxCorp","corp");
+let resetArmed = false;
+document.querySelector(".wrap").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || b.closest("#grid") || b.closest("#payPanel")) return;
+  if (b.id !== "resetData" && resetArmed) { resetArmed = false; const rb = document.getElementById("resetData"); rb.textContent = "サンプルに戻す"; rb.classList.remove("danger"); }
+  switch (b.id) {
+    case "undo": undo(); break;
+    case "rowIns": rowInsert(); break;
+    case "colOpen": setQuarters(() => collapsedQ.clear(), "すべての月を表示しました"); break;
+    case "colClose": setQuarters(() => quarters().forEach(g => collapsedQ.add(g.q)), "Q計だけの表示にしました"); break;
+    case "colNow": { const nowQ = mLabel(NOW()).q, qs = quarters(), keep = qs.some(g => g.q === nowQ) ? nowQ : qs[0].q;
+      setQuarters(() => { collapsedQ.clear(); qs.forEach(g => { if (g.q !== keep) collapsedQ.add(g.q); }); }, `${keep}だけ月を表示しました`); break; }
+    case "incBtn": { const i = rowInfo(cur.r); if (!i || (i.type !== "item" && i.type !== "inc")) { toast("経費のメンバー（明細）の行を選んでから押してください"); break; } OPS.incAdd(i); break; }
+    case "rowDel": rowDelete(); break;
+    case "payMark": case "payUndo": {
+      const t = payTargets(); if (!t.length) { toast("金額が入っているセルを選んでください"); break; }
+      const d = document.getElementById("payDate").value || todayStr();
+      mutate(() => t.forEach(x => setPaid(x.it, x.k, b.id === "payMark" ? d : null)));
+      toast(b.id === "payMark" ? `${t.length}件を支払済（${fmtDate(d)}）にしました` : `${t.length}件を支払い前に戻しました`); break; }
+    case "addMonth": { const added = addMonths(1); toast(`${mLabel(added[0]).long}を追加しました（前月の目標・経費を引き継ぎ）`); break; }
+    case "addQ": {
+      const last = S.months[S.months.length - 1], m = +last.split("-")[1];
+      const n = m % 3 === 0 ? 3 : 3 - (m % 3);      // 途中のQなら残りを埋める
+      const added = addMonths(n), q = mLabel(added[added.length - 1]).q;
+      collapsedQ.delete(q); try { localStorage.setItem(KEY + "-uiq", JSON.stringify([...collapsedQ])); } catch(e) {}
+      render();
+      const ci = C.findIndex(c => c.t === "m" && c.k === added[0]); if (ci > 0) { cur.c = ci; anc = {...cur}; paintSel(true); }
+      toast(`${q}（${added.map(k => mLabel(k).short).join("・")}）を追加しました。前月の目標・経費を引き継いでいます`); break; }
+    case "btnRules": document.getElementById("rulesPanel").hidden ^= true; break;
+    case "btnData": document.getElementById("dataPanel").hidden ^= true; break;
+    case "exportData": { const box = document.getElementById("dataBox"), json = JSON.stringify(S); box.value = json;
+      (navigator.clipboard ? navigator.clipboard.writeText(json) : Promise.reject()).then(() => toast("データをコピーしました"), () => { box.select(); toast("テキストを選択しました。コピーしてください"); }); break; }
+    case "importData": try { const d = JSON.parse(document.getElementById("dataBox").value); if (!d.months || !d.cats || !d.services) throw 0; mutate(() => S = d); toast("読み込みました"); } catch(err) { toast("読み込めませんでした。書き出したデータをそのまま貼り付けてください"); } break;
+    case "resetData": if (!resetArmed) { resetArmed = true; b.textContent = "本当に初期化する"; b.classList.add("danger"); } else { resetArmed = false; b.textContent = "サンプルに戻す"; b.classList.remove("danger"); mutate(() => S = seed()); toast("サンプルに戻しました"); } break;
+  }
+});
+
+render();
+</script>
