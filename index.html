@@ -249,10 +249,6 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
   <div class="mh">
     <div class="mh-top">
       <div><div class="eyebrow">副業総合支援事業部 · LBS組み込み前デモ</div><div class="title-line"><h1>事業部予算管理</h1><span class="demo-badge">DEMO</span></div></div>
-      <div class="mh-actions">
-        <button class="mbtn" id="btnRules" type="button">使い方・ルール</button>
-        <button class="mbtn" id="btnData" type="button">データ</button>
-      </div>
     </div>
     <div class="kpi-head" id="kpiHead"></div>
     <div class="kpis" id="kpis"></div>
@@ -260,45 +256,9 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
 </header>
 
 <div class="wrap">
-  <section class="panel" id="rulesPanel" hidden>
-    <h3>計算ルール</h3>
-    <div class="rules">
-      <div class="rule"><b>目標粗利</b>目標件数 × 単価</div>
-      <div class="rule"><b>経費</b>メンバーや項目ごとの明細の合計。明細は「=36*0.7*250」のように式でも入力できます</div>
-      <div class="rule"><b>税引前利益</b>粗利 − 経費（目標は目標粗利、実績は実績粗利から経費明細を引く）</div>
-      <div class="rule"><b>支払い状況</b>経費明細のセルごとに「支払い前／支払済（支払日）」を記録。支払期限は各月の月末で、過ぎても未払いなら期限超過</div>
-      <div class="rule"><b>インセンティブ</b>メンバーの行の「＋インセンティブ」で、そのメンバーが「合計（基本報酬＋インセンティブ）」と内訳2行の表示になります。金額・支払い状況・メモは内訳ごとに記録でき、合計の行で2つまとめて支払済にもできます</div>
-      <div class="rule"><b>純利益</b>税引前 − 消費税 − 法人税。税は税引前にかけ、赤字の月は0円</div>
-    </div>
-    <h3>操作</h3>
-    <div class="keys">
-      <span><kbd>↑↓←→</kbd> 移動</span><span><kbd>Shift</kbd>+矢印・ドラッグ 範囲選択</span>
-      <span>そのまま入力／<kbd>Enter</kbd>／ダブルクリック 編集</span><span><kbd>Tab</kbd> 右へ</span>
-      <span><kbd>Delete</kbd> 消去</span><span><kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>V</kbd> コピー・貼り付け（スプシから直接OK）</span>
-      <span><kbd>Ctrl</kbd>+<kbd>D</kbd> 下へコピー</span><span><kbd>Ctrl</kbd>+<kbd>R</kbd> 右へコピー</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 元に戻す</span>
-      <span>Q計の見出しをクリック その四半期の月を折りたたみ・展開</span><span>「＋ Qを追加」 次の3か月を追加（前月の目標・経費を引き継ぎ）</span>
-      <span>右クリック（スマホは長押し） 行の挿入・複製・移動・削除</span><span><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>=</kbd> 行を挿入</span><span><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>−</kbd> 行を削除</span>
-      <span>項目名・グループ名・サービス名もセルと同じように書き換えられます</span>
-    </div>
-  </section>
-
-  <section class="panel" id="dataPanel" hidden>
-    <h3>データ</h3>
-    <p style="margin:0;font-size:12px;color:var(--muted)">入力内容はこのブラウザに自動保存されます。別の端末へ移すときは、コピーしたデータを移動先で貼り付けて読み込んでください。</p>
-    <textarea id="dataBox" placeholder="書き出したデータをここに貼り付けると読み込めます"></textarea>
-    <div class="toolbar">
-      <button class="btn" id="exportData" type="button">データをコピー</button>
-      <button class="btn" id="importData" type="button">貼り付けたデータを読み込む</button>
-      <button class="btn" id="resetData" type="button">サンプルに戻す</button>
-    </div>
-  </section>
-
   <div class="toolbar">
     <div class="tgroup"><button class="btn" id="undo" type="button" title="元に戻す（Ctrl+Z）">↶ 元に戻す</button></div>
     <div class="tgroup">
-      <button class="btn" id="rowIns" type="button" title="選択中の行の下に追加（Ctrl+Alt+=）">＋ 行を挿入</button>
-      <button class="btn" id="rowDel" type="button" title="選択中の行を削除（Ctrl+Alt+−）">− 行を削除</button>
-      <button class="btn" id="incBtn" type="button" title="選択中のメンバーにインセンティブ行を追加">＋ インセンティブ</button>
       <button class="btn" id="addQ" type="button" title="次の四半期（3か月分）を追加。前月の目標と経費を引き継ぎます">＋ Qを追加</button>
       <button class="btn" id="addMonth" type="button" title="1か月だけ追加。前月の目標と経費を引き継ぎます">＋ 月を追加</button>
     </div>
@@ -1016,10 +976,8 @@ function addMonths(n){
 function toast(msg){ const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 1600); }
 function taxInput(id, key){ document.getElementById(id).addEventListener("change", e => { const n = toNum(e.target.value); if (n === null) { e.target.value = S.settings[key]; return; } mutate(() => S.settings[key] = n); }); }
 taxInput("taxCt","ct"); taxInput("taxCorp","corp");
-let resetArmed = false;
 document.querySelector(".wrap").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || b.closest("#grid") || b.closest("#payPanel")) return;
-  if (b.id !== "resetData" && resetArmed) { resetArmed = false; const rb = document.getElementById("resetData"); rb.textContent = "サンプルに戻す"; rb.classList.remove("danger"); }
   switch (b.id) {
     case "undo": undo(); break;
     case "rowIns": rowInsert(); break;
@@ -1043,12 +1001,6 @@ document.querySelector(".wrap").addEventListener("click", e => {
       render();
       const ci = C.findIndex(c => c.t === "m" && c.k === added[0]); if (ci > 0) { cur.c = ci; anc = {...cur}; paintSel(true); }
       toast(`${q}（${added.map(k => mLabel(k).short).join("・")}）を追加しました。前月の目標・経費を引き継いでいます`); break; }
-    case "btnRules": document.getElementById("rulesPanel").hidden ^= true; break;
-    case "btnData": document.getElementById("dataPanel").hidden ^= true; break;
-    case "exportData": { const box = document.getElementById("dataBox"), json = JSON.stringify(S); box.value = json;
-      (navigator.clipboard ? navigator.clipboard.writeText(json) : Promise.reject()).then(() => toast("データをコピーしました"), () => { box.select(); toast("テキストを選択しました。コピーしてください"); }); break; }
-    case "importData": try { const d = JSON.parse(document.getElementById("dataBox").value); if (!d.months || !d.cats || !d.services) throw 0; mutate(() => S = d); toast("読み込みました"); } catch(err) { toast("読み込めませんでした。書き出したデータをそのまま貼り付けてください"); } break;
-    case "resetData": if (!resetArmed) { resetArmed = true; b.textContent = "本当に初期化する"; b.classList.add("danger"); } else { resetArmed = false; b.textContent = "サンプルに戻す"; b.classList.remove("danger"); mutate(() => S = seed()); toast("サンプルに戻しました"); } break;
   }
 });
 
