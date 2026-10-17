@@ -273,6 +273,31 @@ tr.item:hover .incbtn,td.cur .incbtn{opacity:1}
 .ctx .ttl{font-size:11px;color:var(--muted);padding:4px 12px 2px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:999px;font-size:12px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 @media (prefers-reduced-motion:reduce){.chev{transition:none}}
+
+/* 支払額（÷1.1）とカード編集 */
+.prow .amt{display:grid;justify-items:end;gap:1px}
+.copyamt{border:0;background:transparent;padding:0;font:600 15px var(--f-num);color:var(--ink);font-variant-numeric:tabular-nums;cursor:pointer;border-radius:4px}
+.copyamt:hover{color:var(--accent);text-decoration:underline dotted}
+.booked{font-size:10px;color:var(--muted);font-family:var(--f-num);font-weight:400}
+.howtag{display:inline-block;font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:0 6px;line-height:16px;vertical-align:1px}
+.howtag.ov{color:var(--warn);background:var(--inc-soft)}
+.divbtn{border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:10px;font-weight:400;padding:0 7px;margin-left:6px;border-radius:999px;font-family:var(--f-body);line-height:17px;cursor:pointer}
+.divbtn.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.prow .ctl .btn.pedit{margin-left:auto}
+.prow .ctl .btn.pedit + .btn{margin-left:0}
+.ped{grid-column:1/-1;display:grid;gap:8px;padding-top:8px;border-top:1px dashed var(--line-strong)}
+.chk{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.pedrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+.pedrow label{display:grid;gap:2px;font-size:10px;color:var(--muted);min-width:0}
+.pedrow label.wide{grid-column:1/-1}
+.pedrow input{width:100%;min-width:0}
+.pedh{grid-column:1/-1;font-size:12px;font-weight:700}
+.pin{font:inherit;font-family:var(--f-num);font-size:13px;border:1px solid var(--line-strong);border-radius:6px;padding:3px 6px;background:var(--surface);color:var(--ink);text-align:right}
+.pedrow label.wide .pin{font-family:var(--f-body);text-align:left}
+.pin::placeholder{color:var(--muted);font-size:11px}
+.pedhint{margin:0;font-size:10px;color:var(--muted)}
+.pnote{margin-top:8px;font-size:10px;color:var(--muted)}
+@media (max-width:480px){.pedrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 </style>
 
 <header class="masthead">
@@ -348,11 +373,11 @@ function seed(){
       {id:"aih", name:"AI（高単価）",   price:600000, counts:V([0,0,0,1,3,5,8,11,15]),             actual:{}}
     ],
     cats:[
-      {id:uid(), name:"固定販管費", items:[item("山本 固定給", oct(110000,110000))]},
-      {id:uid(), name:"人件費（採用）", items:[
+      {id:uid(), name:"固定販管費", div:true, items:[item("山本 固定給", oct(110000,110000))]},
+      {id:uid(), name:"人件費（採用）", div:true, items:[
         item("佐々木真由", oct(80000,80000)), item("安嶋凛音", oct(22000,22000)),
         item("若木啓輔", oct(43000,40000)), item("佐藤舞花", oct(11000,30000))]},
-      {id:uid(), name:"人件費（CW）", items:[
+      {id:uid(), name:"人件費（CW）", div:true, items:[
         item("河野百香", cw(7200,36)), item("大塚夕夏", cw(8200,41)), item("早藤美和", cw(13200,66)),
         item("中村仁美", cw(6000,30)), item("村上遥香", cw(3000,15))]},
       {id:uid(), name:"固定費（公式LINE等）", items:[
@@ -365,6 +390,7 @@ function seed(){
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) } catch(e) { S = null }
 if (!S || !S.months || !S.cats) S = seed();
+S.cats.forEach(c => { if (c.div === undefined) c.div = /人件費|固定販管費/.test(c.name); });
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch(e) {} };
 const hist = [];
 function mutate(fn){ hist.push(JSON.stringify(S)); if (hist.length > 80) hist.shift(); fn(); save(); render(); }
@@ -427,6 +453,20 @@ function payState(it, k){
 const PAYLABEL = {paid:"支払済", due:"支払い前", over:"期限超過"};
 const paidSum = k => S.cats.reduce((x,c) => x + allItems(c).reduce((y,it) => { const p = payState(it,k); return y + (p && p.s === "paid" ? p.a : 0); }, 0), 0);
 function setPaid(it, k, date){ it.paid = it.paid || {}; if (date) it.paid[k] = date; else delete it.paid[k]; }
+
+/* ---------- 支払額（スタッフへは ÷1.1、1円未満切り捨て） ---------- */
+const memberOf = it => it.isInc ? parentOf(it) : it;
+const catOf = it => S.cats.find(c => c.items.includes(memberOf(it)));
+const divOn = it => { const m = memberOf(it); if (m && m.div !== undefined) return m.div; const c = catOf(it); return !!(c && c.div); };
+const autoPay = (it, k) => { const a = nz(ev(it.vals[k])); return divOn(it) ? Math.floor(a * 10 / 11 + 1e-7) : a; };
+const hasOv = (it, k) => !!(it.payOv && it.payOv[k] !== undefined);
+const payAmt = (it, k) => hasOv(it, k) ? it.payOv[k] : autoPay(it, k);
+function setOv(it, k, v){ it.payOv = it.payOv || {}; if (v === null) delete it.payOv[k]; else it.payOv[k] = v; }
+function paySums(k){
+  let total = 0, paid = 0, over = 0;
+  S.cats.forEach(c => allItems(c).forEach(it => { const ps = payState(it, k); if (!ps) return; const a = payAmt(it, k); total += a; if (ps.s === "paid") paid += a; if (ps.s === "over") over += a; }));
+  return {total, paid, over, unpaid: total - paid};
+}
 
 /* ---------- 行と列 ---------- */
 let R = [], C = [];
@@ -674,30 +714,46 @@ function renderPay(){
     payMonth = S.months.find(k => k >= now) || S.months[0];
   }
   const k = payMonth, groups = [];
-  let total = 0, paid = 0, over = 0;
   const Y = n => "¥" + Math.round(n).toLocaleString("ja-JP");
-  let itemCount = 0;
+  const sum = paySums(k), total = sum.total, paid = sum.paid, over = sum.over;
+  let itemCount = 0, booked = 0;
   S.cats.forEach(c => {
     const rows = []; let catTotal = 0;
     c.items.forEach(it => {
       const ps = personState(it, k); if (!ps) return;
-      const parts = [ps.base, ps.inc].filter(Boolean);
-      total += ps.a; catTotal += ps.a; itemCount++;
-      parts.forEach(p => { if (p.s === "paid") paid += p.a; if (p.s === "over") over += p.a; });
-      const ids = [it, it.inc].filter(p => p && payState(p, k)).map(p => p.id).join(",");
-      const memos = [it.notes && it.notes[k], it.inc && it.inc.notes && it.inc.notes[k]].filter(Boolean);
-      const breakdown = ps.inc ? `<div class="bd">基本 ${Y(ps.base ? ps.base.a : 0)} ＋ <span class="tag">インセンティブ</span> ${Y(ps.inc.a)}</div>` : "";
-      rows.push(`<div class="prow" data-state="${ps.s}">
-        <div style="min-width:0"><div class="nm">${esc(it.name)}</div><div class="ct">${memos.length ? esc(memos.join(" / ")) : "明細"}</div></div>
-        <div class="amt">${Y(ps.a)}</div>
+      const parts = [it, it.inc].filter(p => p && payState(p, k));
+      const pay = parts.reduce((x,p) => x + payAmt(p, k), 0);
+      catTotal += pay; booked += ps.a; itemCount++;
+      const ids = parts.map(p => p.id).join(",");
+      const div = divOn(it), anyOv = parts.some(p => hasOv(p, k)), open = openCards.has(it.id);
+      const memos = parts.map(p => p.notes && p.notes[k]).filter(Boolean);
+      const how = anyOv ? `<span class="howtag ov">手入力あり</span>` : div ? `<span class="howtag">÷1.1</span>` : "";
+      const breakdown = it.inc && parts.length > 1 ? `<div class="bd">基本 ${Y(payAmt(it, k))} ＋ <span class="tag">インセンティブ</span> ${Y(payAmt(it.inc, k))}</div>` : "";
+      const editor = !open ? "" : `<div class="ped">
+          <label class="chk"><input type="checkbox" id="dv-${it.id}" data-div="${it.id}"${div ? " checked" : ""}> 支払時に ÷1.1 する</label>
+          ${parts.map(p => { const lab = p.isInc ? "インセンティブ" : "基本報酬", raw = p.vals[k];
+            return `<div class="pedrow">
+              <div class="pedh">${p.isInc ? `<span class="tag">インセンティブ</span>` : "基本報酬"}</div>
+              <label>計上額<input class="pin" id="bk-${p.id}" data-book="${p.id}" inputmode="decimal" value="${esc(typeof raw === "string" ? raw : fmtV(ev(raw)))}" aria-label="${lab}の計上額"></label>
+              <label>支払額<input class="pin" id="pa-${p.id}" data-pay="${p.id}" inputmode="numeric" value="${hasOv(p, k) ? p.payOv[k].toLocaleString("ja-JP") : ""}" placeholder="${autoPay(p, k).toLocaleString("ja-JP")}（自動）" aria-label="${lab}の支払額"></label>
+              <label>支払日<input type="date" id="pdp-${p.id}" data-pdate="${p.id}" value="${(p.paid && p.paid[k]) || ""}" aria-label="${lab}の支払日"></label>
+              <label class="wide">メモ<input class="pin" id="pm-${p.id}" data-pmemo="${p.id}" value="${esc((p.notes && p.notes[k]) || "")}" placeholder="例：MNP4900円＋アフィリ営業報酬" aria-label="${lab}のメモ"></label>
+            </div>`; }).join("")}
+          <p class="pedhint">計上額はシートの金額（経費）です。支払額を空欄にすると、計上額${div ? " ÷1.1（1円未満切り捨て）" : ""}で自動計算します。</p>
+        </div>`;
+      rows.push(`<div class="prow${open ? " open" : ""}" data-state="${ps.s}">
+        <div style="min-width:0"><div class="nm">${esc(it.name)} ${how}</div><div class="ct">${memos.length ? esc(memos.join(" / ")) : "明細"}</div></div>
+        <div class="amt"><button type="button" class="copyamt" data-copy="${pay}" title="支払額をコピー">${Y(pay)}</button><div class="booked">計上 ${Y(ps.a)}</div></div>
         ${breakdown}
         <div class="ctl">
           <span class="pill ${ps.s}">${PAYLABEL[ps.s]}${ps.partPaid ? "（一部）" : ""}</span>
-          <label class="pay-date">支払日<input type="date" id="pd-${it.id}" data-pdate="${ids}" value="${ps.date || ""}" aria-label="${esc(it.name)}の支払日"></label>
+          ${open ? "" : `<label class="pay-date">支払日<input type="date" id="pd-${it.id}" data-pdate="${ids}" value="${ps.date || ""}" aria-label="${esc(it.name)}の支払日"></label>`}
+          <button type="button" class="btn line pedit" data-pedit="${it.id}" aria-expanded="${open}">${open ? "閉じる" : "編集"}</button>
           <button type="button" class="btn ${ps.s === "paid" ? "line" : "solid"}" data-ptoggle="${ids}" data-pname="${esc(it.name)}">${ps.s === "paid" ? "取り消す" : "支払済にする"}</button>
-        </div></div>`);
+        </div>
+        ${editor}</div>`);
     });
-    if (rows.length) groups.push(`<section class="pgroup"${hueStyle(catHue(c))}><div class="pgroup-head"><span class="pgroup-title">${esc(c.name)}</span><span class="pgroup-meta"><span>${rows.length}件</span><b>${Y(catTotal)}</b></span></div><div class="pgroup-list">${rows.join("")}</div></section>`);
+    if (rows.length) groups.push(`<section class="pgroup"${hueStyle(catHue(c))}><div class="pgroup-head"><span class="pgroup-title">${esc(c.name)} <button type="button" class="divbtn${c.div ? " on" : ""}" data-cdiv="${c.id}" title="クリックで切り替え：支払時に ÷1.1 するか">${c.div ? "÷1.1" : "÷1.1なし"}</button></span><span class="pgroup-meta"><span>${rows.length}件</span><b>${Y(catTotal)}</b></span></div><div class="pgroup-list">${rows.join("")}</div></section>`);
   });
   const unpaid = total - paid;
   const progress = total ? Math.round(paid / total * 100) : 0;
@@ -708,17 +764,18 @@ function renderPay(){
     </div>
     <div class="pay-overview">
       <div class="payhero${over ? " over" : ""}">
-        <div class="payhero-top"><span>今月の未払い</span><span class="pill deadline${over ? " over" : ""}">${over ? "期限超過" : `期限 ${fmtDate(monthEnd(k))}`}</span></div>
+        <div class="payhero-top"><span>今月の未払い（振込額）</span><span class="pill deadline${over ? " over" : ""}">${over ? "期限超過" : `期限 ${fmtDate(monthEnd(k))}`}</span></div>
         <strong>${Y(unpaid)}</strong>
         <div class="payhero-meta"><span>支払予定 <b>${Y(total)}</b></span><span>支払済 <b>${Y(paid)}</b></span></div>
       </div>
-      ${total ? `<div class="pay-progress-card"><div class="p-progress"><div class="p-progress-head"><span>支払いの進捗</span><b>${progress}% 完了</b></div><div class="pbar" aria-hidden="true"><i class="p" style="width:${paid / total * 100}%"></i><i class="o" style="width:${over / total * 100}%"></i></div></div></div>` : ""}
+      ${total ? `<div class="pay-progress-card"><div class="p-progress"><div class="p-progress-head"><span>支払いの進捗</span><b>${progress}% 完了</b></div><div class="pbar" aria-hidden="true"><i class="p" style="width:${paid / total * 100}%"></i><i class="o" style="width:${over / total * 100}%"></i></div><div class="pnote">金額は実際に振り込む額です（÷1.1 のグループは計上額 ÷1.1）。シート上の経費は ${Y(booked)}</div></div></div>` : ""}
     </div>
     ${over ? `<div class="overline">期限超過 ${Y(over)}（${fmtDate(monthEnd(k))}を過ぎています）</div>` : ""}
     ${groups.length ? `<div class="pay-list-head"><span>支払先</span><b>${itemCount}件</b></div><div class="pgroup-grid">${groups.join("")}</div>
       ${unpaid > 0 ? `<button type="button" class="btn line pay-all" id="payAll">未払いをまとめて支払済にする（${fmtDate(todayStr())}）</button>` : ""}`
       : `<p class="empty">この月の経費明細はまだありません。シートの経費欄に金額を入れると、ここに支払先が並びます。</p>`}`;
 }
+const openCards = new Set();
 
 /* ---------- 月サマリー（ヘッダー） ---------- */
 function renderKpis(k){
@@ -734,20 +791,41 @@ function renderKpis(k){
     tile("粗利", a ? Y(gA(k)) : Y(gT(k)), a ? `目標 ${Y(gT(k))} · 達成率 ${rate}%` : "目標値（実績は未入力）",
       a ? `<div class="meter"><i style="width:${Math.min(rate,100)}%"></i></div>` : "") +
     tile("経費", Y(ex), `支払済 ${ex ? Math.round(pd / ex * 100) : 0}%${incSum(k) ? ` · うちインセンティブ ${Y(incSum(k))}` : ""}`, `<div class="meter"><i style="width:${ex ? Math.min(pd / ex * 100, 100) : 0}%"></i></div>`) +
-    tile("未払い", `<span class="${over ? "neg" : ex - pd === 0 && ex ? "ok" : ""}">${Y(ex - pd)}</span>`, over ? `うち期限超過 ${Y(over)}` : `支払済 ${Y(pd)} · 期限 ${fmtDate(monthEnd(k))}`) +
+    (() => { const ps = paySums(k); return tile("未払い（振込額）", `<span class="${ps.over ? "neg" : ps.total && !ps.unpaid ? "ok" : ""}">${Y(ps.unpaid)}</span>`, ps.over ? `うち期限超過 ${Y(ps.over)}` : `支払済 ${Y(ps.paid)} · 期限 ${fmtDate(monthEnd(k))}`); })() +
     tile("税引前利益", `<span class="${(a ? a.pre : t.pre) < 0 ? "neg" : ""}">${Y(a ? a.pre : t.pre)}</span>`, a ? `目標 ${Y(t.pre)}` : "目標値") +
     tile("純利益", `<span class="${(a ? a.net : t.net) < 0 ? "neg" : ""}">${Y(a ? a.net : t.net)}</span>`, a ? `目標 ${Y(t.net)}` : `目標値 · 税 ${S.settings.ct + S.settings.corp}%`);
 }
 const payPanel = document.getElementById("payPanel");
 payPanel.addEventListener("change", e => {
   if (e.target.id === "payMonth") { payMonth = e.target.value; renderPay(); return; }
+  const d = e.target.dataset, k = payMonth;
+  if (d.div) { const it = findItem(d.div), c = catOf(it), on = e.target.checked;
+    mutate(() => { if (on === !!c.div) delete it.div; else it.div = on; });
+    toast(on ? `${it.name}は ÷1.1 した額で支払います` : `${it.name}は計上額そのままで支払います`); return; }
+  if (d.book) { const it = findItem(d.book), t = zen(e.target.value).trim();
+    mutate(() => { if (t === "") delete it.vals[k]; else if (t.startsWith("=")) it.vals[k] = t; else { const n = toNum(t); if (n === null) delete it.vals[k]; else it.vals[k] = n; } });
+    toast("計上額を更新しました（シートにも反映）"); return; }
+  if (d.pay) { const it = findItem(d.pay), n = toNum(e.target.value);
+    mutate(() => setOv(it, k, e.target.value.trim() === "" || n === null ? null : Math.round(n)));
+    toast(e.target.value.trim() === "" ? "支払額を自動計算に戻しました" : "支払額を手入力で保存しました"); return; }
+  if (d.pmemo) { const it = findItem(d.pmemo), v = e.target.value.trim();
+    mutate(() => { it.notes = it.notes || {}; if (v) it.notes[k] = v; else delete it.notes[k]; });
+    toast(v ? "メモを保存しました" : "メモを消しました"); return; }
   const ids = e.target.dataset.pdate; if (!ids) return;
   const its = ids.split(",").map(findItem).filter(Boolean), nm = (its[0].isInc ? parentOf(its[0]) : its[0]).name;
   mutate(() => its.forEach(it => setPaid(it, payMonth, e.target.value || null)));
   toast(e.target.value ? `${nm}を支払済（${fmtDate(e.target.value)}）にしました` : `${nm}を支払い前に戻しました`);
 });
+payPanel.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing && e.target.classList.contains("pin")) e.target.blur(); });
 payPanel.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.cdiv) { const c = S.cats.find(x => x.id === b.dataset.cdiv), on = !c.div;
+    mutate(() => { c.div = on; c.items.forEach(it => { if (it.div === on) delete it.div; }); });
+    toast(on ? `「${c.name}」は ÷1.1 した額で支払います` : `「${c.name}」は計上額そのままで支払います`); return; }
+  if (b.dataset.pedit) { const id = b.dataset.pedit; openCards.has(id) ? openCards.delete(id) : openCards.add(id); renderPay();
+    const f = document.getElementById("pa-" + id); if (openCards.has(id) && f) f.focus(); return; }
+  if (b.dataset.copy) { const v = b.dataset.copy;
+    (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(() => toast(`¥${Number(v).toLocaleString("ja-JP")} をコピーしました`), () => toast(`支払額：${Number(v).toLocaleString("ja-JP")}円`)); return; }
   if (b.id === "payAll") { mutate(() => S.cats.forEach(c => allItems(c).forEach(it => { const ps = payState(it, payMonth); if (ps && ps.s !== "paid") setPaid(it, payMonth, todayStr()); }))); toast("未払いをまとめて支払済にしました"); return; }
   const ids = b.dataset.ptoggle; if (!ids) return;
   const its = ids.split(",").map(findItem).filter(Boolean);
